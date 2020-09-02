@@ -79,6 +79,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ProgressObject.cs" />
     <Compile Include="Record.cs" />
     <Compile Include="ThreadInfo.cs" />
     <Page Include="MainWindow.xaml">

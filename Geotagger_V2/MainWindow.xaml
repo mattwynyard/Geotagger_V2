@@ -24,15 +24,18 @@
                     <Label Content="Output Path" HorizontalAlignment="Left" Height="27" Margin="16,131,0,0" VerticalAlignment="Top" Width="84" RenderTransformOrigin="0.58,1.863"/>
                     <Button x:Name="BrowseInput" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="586,85,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click"/>
                     <Button x:Name="BrowseOutput" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="586,131,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click"/>
-                    <Button x:Name="Geotag" Content="Geotag" HorizontalAlignment="Left" Margin="586,335,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Geotag_Click"/>
+                    <Button x:Name="Geotag" Content="Geotag" HorizontalAlignment="Left" Margin="586,180,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Geotag_Click"/>
                     <ProgressBar Name="ProgessBar" HorizontalAlignment="Left" Height="31" Margin="105,263,0,0" VerticalAlignment="Top" Width="558"/>
-                    <Label Name="ProgessLabel" HorizontalAlignment="Left" Margin="105,237,0,0" VerticalAlignment="Top" Width="142" Height="21"/>
+                    <Label Name="ProgessLabel" HorizontalAlignment="Left" Margin="105,238,0,0" VerticalAlignment="Top" Width="225" Height="25"/>
+                    <Label Content="Photos: " HorizontalAlignment="Left" Margin="105,317,0,0" VerticalAlignment="Top"/>
+                    <Label Name="PhotoCountLabel" Content="" HorizontalAlignment="Left" Margin="163,317,0,0" VerticalAlignment="Top"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Read">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
         </TabControl>
+        <Label Content="Label" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
     </Grid>
 </Window>
