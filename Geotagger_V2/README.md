@@ -1,0 +1,1 @@
+# EXIFGeotaggerv1.0

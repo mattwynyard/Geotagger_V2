@@ -1,0 +1,38 @@
+﻿<Window x:Class="Geotagger_V2.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Geotagger_V2"
+        mc:Ignorable="d"
+        Title="Geotagger" Height="600" Width="1000">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="263*"/>
+            <ColumnDefinition Width="467*"/>
+            <ColumnDefinition Width="62*"/>
+        </Grid.ColumnDefinitions>
+        <TabControl HorizontalAlignment="Left" Height="531" Margin="10,28,0,0" VerticalAlignment="Top" Width="972" Grid.ColumnSpan="3">
+            <TabItem Header="Write">
+                <Grid Background="#FFE5E5E5" Margin="0,-17">
+                    <TextBox x:Name="txtBoxDB" HorizontalAlignment="Left" Height="20" Margin="105,48,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476"/>
+                    <TextBox x:Name="txtBoxOutput" HorizontalAlignment="Left" Height="20" Margin="105,131,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476"/>
+                    <TextBox x:Name="txtBoxInput" HorizontalAlignment="Left" Height="20" Margin="105,85,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476"/>
+                    <Button x:Name="BrowseDB" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="586,48,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click"/>
+                    <Label Content="Database Path" HorizontalAlignment="Left" Height="27" Margin="16,41,0,0" VerticalAlignment="Top" Width="89" RenderTransformOrigin="0.58,1.863"/>
+                    <Label Content="Input Path" HorizontalAlignment="Left" Height="27" Margin="16,78,0,0" VerticalAlignment="Top" Width="69" RenderTransformOrigin="0.58,1.863"/>
+                    <Label Content="Output Path" HorizontalAlignment="Left" Height="27" Margin="16,131,0,0" VerticalAlignment="Top" Width="84" RenderTransformOrigin="0.58,1.863"/>
+                    <Button x:Name="BrowseInput" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="586,85,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click"/>
+                    <Button x:Name="BrowseOutput" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="586,131,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click"/>
+                    <Button x:Name="Geotag" Content="Geotag" HorizontalAlignment="Left" Margin="586,335,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Geotag_Click"/>
+                    <ProgressBar Name="ProgessBar" HorizontalAlignment="Left" Height="31" Margin="105,263,0,0" VerticalAlignment="Top" Width="558"/>
+                    <Label Name="ProgessLabel" HorizontalAlignment="Left" Margin="105,237,0,0" VerticalAlignment="Top" Width="142" Height="21"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Read">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+        </TabControl>
+
+    </Grid>
+</Window>
