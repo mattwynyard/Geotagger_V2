@@ -86,17 +86,18 @@ namespace Geotagger_V2
                 //
             });
             await Task.WhenAll(worker);
-            dispatcherTimer.Stop();
+            //dispatcherTimer.Stop();
             //hideProgressBar();
         }
 
         public void DispatcherTimer_Tick(object sender, EventArgs args)
         {
             Console.WriteLine("tick");
-            ProgressObject progress = manager.updateProgress;
-            ProgessLabel.Content = progress.Message;
-            ProgessBar.Value = progress.Value;
-           
+            ProgessLabel.Content = manager.updateProgessMessage;
+            ProgessBar.Value = manager.updateProgessValue;
+            PhotoCountLabel.Content = manager.updatePhotoCount;
+
+
         }
 
         private void hideProgressBar()

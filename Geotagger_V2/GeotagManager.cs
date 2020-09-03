@@ -15,8 +15,9 @@ namespace Geotagger_V2
 {
     public class GeotagManager
     {
-        private string progessMessage = "";
-        private double progessValue = 0;
+        private string progressMessage = "";
+        private double progressValue = 0;
+        private int photoCount = 0;
         private int geotagCount;
         private int sizeRecordQueue;
         private int sizeBitmapQueue;
@@ -80,8 +81,8 @@ namespace Geotagger_V2
         /// <param name="zip">searches and reads zip directory for .jpg files</param>
         public void photoReader(string path, Boolean zip)
         {
-            progress.Message = "Searching directories...";
-            Interlocked.Exchange(ref progress, progress);
+            string initialMessage = "Searching directories...";
+            Interlocked.Exchange(ref progressMessage, initialMessage);
             mZip = zip;
             Task search = Task.Factory.StartNew(() =>
             {
@@ -124,9 +125,8 @@ namespace Geotagger_V2
                     string[] files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories);
                     int fileCount = files.Length;
                     int i = 0;
-                    ProgressObject prog = new ProgressObject();
-                    prog.Message = "Building dictionary...";
-                    Interlocked.Exchange(ref progress, prog);
+                    string message = "Building dictionary...";
+                    Interlocked.Exchange(ref progressMessage, message);
                     foreach (var file in files)
                     {
                         string key = Path.GetFileNameWithoutExtension(file);
@@ -135,9 +135,8 @@ namespace Geotagger_V2
                         i++;
 
                         double newvalue = ((double)i / (double)fileCount) * 100;
-                        progress.Value = newvalue;
-                        //Interlocked.Exchange(ref progessValue, newvalue);
-                        //Interlocked.Exchange(ref progress, progress);
+                        Interlocked.Exchange(ref photoCount, i);
+                        Interlocked.Exchange(ref progressValue, newvalue);
                         if (!added)
                         {
                             string photo = file;
@@ -146,19 +145,17 @@ namespace Geotagger_V2
                 }
             });
             Task.WaitAll(search);
-            ProgressObject newProgress = new ProgressObject();
-            newProgress.Message = "Finished...";
-            Interlocked.Exchange(ref progress, newProgress);
+            string finalMessage = "Finished";
+            Interlocked.Exchange(ref progressMessage, finalMessage);
         }
 
 
         public ProgressObject updateProgress
         {
-            
             get
             {
-                ProgressObject prog = new ProgressObject();
-                return Interlocked.CompareExchange(ref progress, prog, prog);
+                return progress;
+                //return Interlocked.CompareExchange(ref progress, new ProgressObject(), new ProgressObject());
 
             }
         }
@@ -167,7 +164,16 @@ namespace Geotagger_V2
         {
             get
             {
-                return Interlocked.CompareExchange(ref progessMessage, "", "");
+                return Interlocked.CompareExchange(ref progressMessage, "", "");
+
+            }
+        }
+
+        public int updatePhotoCount
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref photoCount, 0, 0);
 
             }
         }
@@ -176,7 +182,7 @@ namespace Geotagger_V2
         {
             get
             {
-                return Interlocked.CompareExchange(ref progessValue, 0, 0);
+                return Interlocked.CompareExchange(ref progressValue, 0, 0);
 
             }
         }
