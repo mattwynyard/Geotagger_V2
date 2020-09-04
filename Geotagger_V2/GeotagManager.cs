@@ -161,7 +161,7 @@ namespace Geotagger_V2
             Interlocked.Exchange(ref progressMessage, finalMessage);
         }
 
-        public async void readDatabase(string dbPath, string inspector)
+        public void readDatabase(string dbPath, string inspector)
         {
             Interlocked.Exchange(ref progressMessage, "Reading database...");
             Interlocked.Exchange(ref progressValue, 0);
@@ -220,7 +220,7 @@ namespace Geotagger_V2
             Interlocked.Exchange(ref progressValue, 0);
             int i = 0;
             Interlocked.Exchange(ref progressMessage, "Writing Geotags...");
-            Task consumer = Task.Factory.StartNew(() =>
+            Task producer = Task.Factory.StartNew(() =>
             {
                 foreach (var item in recordQueue.GetConsumingEnumerable())
                 {
@@ -263,7 +263,7 @@ namespace Geotagger_V2
             });
 
 
-            Task consumeBitmaps = Task.Factory.StartNew(() =>
+            Task consumer = Task.Factory.StartNew(() =>
             {
                 foreach (var item in bitmapQueue.GetConsumingEnumerable())
                 {
@@ -293,8 +293,7 @@ namespace Geotagger_V2
                     }
                 }
             });
-            await Task.WhenAll(consumer);
-            await Task.WhenAll(consumeBitmaps);
+            await Task.WhenAll(producer, consumer);
         }
 
         /// <summary>
