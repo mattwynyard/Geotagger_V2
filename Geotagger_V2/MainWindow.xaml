@@ -27,15 +27,22 @@
                     <Button x:Name="Geotag" Content="Geotag" HorizontalAlignment="Left" Margin="586,180,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Geotag_Click"/>
                     <ProgressBar Name="ProgessBar" HorizontalAlignment="Left" Height="31" Margin="105,263,0,0" VerticalAlignment="Top" Width="558"/>
                     <Label Name="ProgessLabel" HorizontalAlignment="Left" Margin="105,238,0,0" VerticalAlignment="Top" Width="225" Height="25"/>
-                    <Label Content="Photos: " HorizontalAlignment="Left" Margin="105,317,0,0" VerticalAlignment="Top"/>
-                    <Label Name="PhotoCountLabel" Content="" HorizontalAlignment="Left" Margin="163,317,0,0" VerticalAlignment="Top" Width="64"/>
+                    <Label Content="Photos: " HorizontalAlignment="Left" Margin="105,325,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.791,-0.491"/>
+                    <Label Name="PhotoCountLabel" Content="0" HorizontalAlignment="Left" Margin="163,325,0,0" VerticalAlignment="Top" Width="64" RenderTransformOrigin="0.517,0.455"/>
+                    <Label Content="Time Elapsed:" HorizontalAlignment="Left" Margin="105,299,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.682,-0.804" Width="92"/>
+                    <Label Name="TimeLabel" Content="00:00:00.00" HorizontalAlignment="Left" Margin="182,299,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.179,-0.547" Width="81"/>
+                    <Label Content="Records:" HorizontalAlignment="Left" Margin="103,351,0,0" VerticalAlignment="Top"/>
+                    <Label  Name="RecordsLabel" Content="0" HorizontalAlignment="Left" Margin="163,351,0,0" VerticalAlignment="Top"/>
+                    <Label Name="GeotagLabel" Content="Geotagged:" HorizontalAlignment="Left" Margin="105,405,0,0" VerticalAlignment="Top"/>
+                    <Label Name="RecordQueueLabel" Content="Record Queue:" HorizontalAlignment="Left" Margin="521,325,0,0" VerticalAlignment="Top"/>
+
                 </Grid>
             </TabItem>
             <TabItem Header="Read">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
         </TabControl>
-        <Label Content="Label" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        
 
     </Grid>
 </Window>

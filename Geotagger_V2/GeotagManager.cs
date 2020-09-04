@@ -1,15 +1,21 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.OleDb;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Emgu.CV;
+using Emgu.CV.Structure;
 
 namespace Geotagger_V2
 {
@@ -17,6 +23,8 @@ namespace Geotagger_V2
     {
         private string progressMessage = "";
         private double progressValue = 0;
+        private int progressRecordCount = 0;
+        private int progressRecordQueueCount = 0;
         private int photoCount = 0;
         private int geotagCount;
         private int sizeRecordQueue;
@@ -32,6 +40,10 @@ namespace Geotagger_V2
         private ConcurrentDictionary<string, Exception> errorDict;
         private string connectionString;
         private ProgressObject progress;
+        private Boolean geotagging = false;
+
+        private static ManualResetEvent mre = new ManualResetEvent(false);
+        private static readonly object obj = new object();
 
         public GeotagManager()
         {
@@ -57,22 +69,22 @@ namespace Geotagger_V2
             progress = new ProgressObject();
         }
 
-        public BlockingCollection<string> buildQueue(string path)
-        {
-            
-            BlockingCollection<string> fileQueue = new BlockingCollection<string>();
-            string[] files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories);
-            Task producer = Task.Factory.StartNew(() =>
-            {
-                foreach (string file in files)
-                {
-                    fileQueue.Add(file);
-                }
-                fileQueue.CompleteAdding();
-            });
-            Task.WaitAll(producer);
-            return fileQueue;
-        }
+        //public BlockingCollection<string> buildQueue(string path)
+        //{
+
+        //    BlockingCollection<string> fileQueue = new BlockingCollection<string>();
+        //    string[] files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories);
+        //    Task producer = Task.Factory.StartNew(() =>
+        //    {
+        //        foreach (string file in files)
+        //        {
+        //            fileQueue.Add(file);
+        //        }
+        //        fileQueue.CompleteAdding();
+        //    });
+        //    Task.WaitAll(producer);
+        //    return fileQueue;
+        //}
 
         /// <summary>
         /// Adds all image files(.jpg) found in directory to a concurrent dictionary- key: filename, value: filepath
@@ -117,7 +129,7 @@ namespace Geotagger_V2
                             }
                         }
                     }
-                    
+
                 }
                 else
                 {
@@ -130,7 +142,7 @@ namespace Geotagger_V2
                     foreach (var file in files)
                     {
                         string key = Path.GetFileNameWithoutExtension(file);
-                        
+
                         bool added = photoDict.TryAdd(key, file);
                         i++;
 
@@ -149,15 +161,362 @@ namespace Geotagger_V2
             Interlocked.Exchange(ref progressMessage, finalMessage);
         }
 
-
-        public ProgressObject updateProgress
+        public async void readDatabase(string dbPath, string inspector)
         {
-            get
+            Interlocked.Exchange(ref progressMessage, "Reading database...");
+            Interlocked.Exchange(ref progressValue, 0);
+            string _inspector = Utilities.getInspector(inspector);
+            string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
+                "Microsoft.Jet.OLEDB.4.0", dbPath, 5);
+            OleDbConnection connection = new OleDbConnection(connectionString);
+            string strSQL;
+            //string strRecord;
+            string lengthSQL; //sql count string
+            if (_inspector == "")
             {
-                return progress;
-                //return Interlocked.CompareExchange(ref progress, new ProgressObject(), new ProgressObject());
-
+                strSQL = "SELECT * FROM PhotoList WHERE PhotoList.GeoMark = true;";
+                lengthSQL = "SELECT Count(PhotoID) FROM PhotoList WHERE PhotoList.GeoMark = true;";
             }
+            else
+            {
+                strSQL = "SELECT * FROM PhotoList WHERE PhotoList.GeoMark = true AND PhotoList.Inspector = '" + _inspector + "';";
+                lengthSQL = "SELECT Count(PhotoID) FROM PhotoList WHERE PhotoList.GeoMark = true  AND PhotoList.Inspector = '" + _inspector + "';";
+            }
+            OleDbCommand commandLength = new OleDbCommand(lengthSQL, connection);
+            connection.Open();
+            int recordCount = Convert.ToInt32(commandLength.ExecuteScalar());
+            Interlocked.Exchange(ref progressRecordCount, recordCount);
+            commandLength.Dispose();
+
+            Task taskreader = Task.Factory.StartNew(async () =>
+            {
+                int i = 0;
+                Interlocked.Exchange(ref progressMessage, "Building Record Queue...");
+                OleDbCommand command = new OleDbCommand(strSQL, connection);
+                using (OleDbDataReader reader = command.ExecuteReader())
+                {
+                    object[] row;
+                    while (reader.Read())
+                    {
+                        row = new object[reader.FieldCount];
+                        reader.GetValues(row);
+                        Record r = await buildRecord(row);
+                        recordQueue.Add(r);
+                        i++;
+                        double newvalue = ((double)i / (double)recordCount) * 100;
+                        Interlocked.Exchange(ref progressValue, newvalue);
+                    }
+                    reader.Close();
+                    recordQueue.CompleteAdding();
+                    command.Dispose();
+                    connection.Close();
+                }
+            });
+            Task.WaitAll(taskreader);
+        }
+
+        public async void writeGeotag(string outPath)
+        {
+            Interlocked.Exchange(ref progressValue, 0);
+            int i = 0;
+            Interlocked.Exchange(ref progressMessage, "Writing Geotags...");
+            Task consumer = Task.Factory.StartNew(() =>
+            {
+                foreach (var item in recordQueue.GetConsumingEnumerable())
+                {
+                    try
+                    {
+                        ThreadInfo threadInfo = new ThreadInfo();
+                        Boolean found;
+                        string photoPath = null;
+                        found = photoDict.TryRemove(item.PhotoName, out photoPath);
+                        //dictCount = photoDict.Count;
+                        if (found)
+                        {
+                            threadInfo.PhotoPath = photoPath;
+                            threadInfo.Zip = mZip;
+                            threadInfo.OutPath = outPath;
+                            threadInfo.Record = item;
+                            threadInfo.Photo = item.PhotoName;
+                            Record newRecord = null;
+                            newRecord = ProcessFile(threadInfo);
+                            recordDict.TryAdd(item.PhotoName, item);
+                        }
+                        else
+                        {
+
+                            noPhotoDict.TryAdd(item.PhotoName, item);
+
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        String s = ex.Message;
+                    }
+                    Interlocked.Exchange(ref progressRecordQueueCount, recordQueue.Count);
+                    i++;
+                    double newvalue = ((double)i / (double)progressRecordCount) * 100;
+                    Interlocked.Exchange(ref progressValue, newvalue);
+                }
+                bitmapQueue.CompleteAdding();
+                mre.Set();
+            });
+
+
+            Task consumeBitmaps = Task.Factory.StartNew(() =>
+            {
+                foreach (var item in bitmapQueue.GetConsumingEnumerable())
+                {
+                    if (!bitmapQueue.IsCompleted)
+                    {
+                        mre.WaitOne();
+                        if (bitmapQueue.IsAddingCompleted)
+                        {
+                            if (item != null)
+                            {
+                                processImage(item);
+                            }
+                            if (bitmapQueue.Count == 0)
+                            {
+                                break;
+                            }
+
+                        }
+                        else
+                        {
+                            processImage(item);
+                            if (bitmapQueue.Count == 0)
+                            {
+                                mre.Reset();
+                            }
+                        }
+                    }
+                }
+            });
+            await Task.WhenAll(consumer);
+            await Task.WhenAll(consumeBitmaps);
+        }
+
+        /// <summary>
+        /// Intialises a new Record and adds data extracted from access to each relevant field.
+        /// The record is then added to the Record Dictionary.
+        /// </summary>
+        /// <param name="row: the access record"></param>
+        private async Task<Record> buildRecord(Object[] row)
+        {
+            Record r = new Record((string)row[1]);
+            await Task.Run(() =>
+            {
+                try
+                {
+                    int id = (int)row[0];
+                    r.Id = id.ToString();
+                    r.PhotoRename = Convert.ToString(row[2]);
+                    r.Latitude = (double)row[3];
+                    r.Longitude = (double)row[4];
+                    r.Altitude = (double)row[5];
+                    r.Bearing = Convert.ToDouble(row[6]);
+                    r.Velocity = Convert.ToDouble(row[7]);
+                    r.Satellites = Convert.ToInt32(row[8]);
+                    r.PDop = Convert.ToDouble(row[9]);
+                    r.Inspector = Convert.ToString(row[10]);
+                    r.TimeStamp = Convert.ToDateTime(row[12]);
+                    r.GeoMark = Convert.ToBoolean(row[13]);
+                    r.Side = Convert.ToString(row[19]);
+                    r.Road = Convert.ToInt32(row[20]);
+                    r.Carriageway = Convert.ToInt32(row[21]);
+                    r.ERP = Convert.ToInt32(row[22]);
+                    r.FaultID = Convert.ToInt32(row[23]);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.StackTrace);
+                }
+            });
+            return r;
+        }
+
+        private Record ProcessFile(object a)
+        {
+            ThreadInfo threadInfo = a as ThreadInfo;
+            Record r = threadInfo.Record;
+            string outPath = threadInfo.OutPath;
+            int length = threadInfo.Length;
+            string path;
+            Bitmap bmp = null;
+            PropertyItem[] propItems = null;
+            r.GeoTag = true;
+            string photoName = r.PhotoName;
+            string photoRename = r.PhotoRename;
+            r.PhotoName = photoRename; //new photo name          
+            path = outPath + "\\" + photoRename + ".jpg";
+            string uncPath = GetUNCPath(path);
+            r.Path = uncPath;
+            threadInfo.OutPath = uncPath;
+
+            try
+            {
+                if (!threadInfo.Zip)
+                {
+                    bmp = new Bitmap(threadInfo.PhotoPath);
+                    propItems = bmp.PropertyItems;
+                    threadInfo.propItemLatRef = bmp.GetPropertyItem(0x0001);
+                    threadInfo.propItemLat = bmp.GetPropertyItem(0x0002);
+                    threadInfo.propItemLonRef = bmp.GetPropertyItem(0x0003);
+                    threadInfo.propItemLon = bmp.GetPropertyItem(0x0004);
+                    threadInfo.propItemAltRef = bmp.GetPropertyItem(0x0005);
+                    threadInfo.propItemAlt = bmp.GetPropertyItem(0x0006);
+                    threadInfo.propItemSat = bmp.GetPropertyItem(0x0008);
+                    threadInfo.propItemDir = bmp.GetPropertyItem(0x0011);
+                    threadInfo.propItemVel = bmp.GetPropertyItem(0x000D);
+                    threadInfo.propItemPDop = bmp.GetPropertyItem(0x000B);
+                    threadInfo.propItemDateTime = bmp.GetPropertyItem(0x0132);
+                }
+                else
+                {
+                    using (FileStream zipToOpen = new FileStream(threadInfo.PhotoPath, FileMode.Open))
+                    {
+                        String[] tokens = zipToOpen.Name.Split('\\');
+                        string s = tokens[tokens.Length - 1];
+                        string key = s.Substring(0, s.Length - 4);
+                        using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Read))
+                        {
+                            string entry = threadInfo.Photo + ".jpg";
+                            ZipArchiveEntry zip = archive.GetEntry(entry);
+                            Stream stream = zip.Open();
+                            Image img = Image.FromStream(stream);
+                            propItems = img.PropertyItems;
+                            threadInfo.propItemLatRef = img.GetPropertyItem(0x0001);
+                            threadInfo.propItemLat = img.GetPropertyItem(0x0002);
+                            threadInfo.propItemLonRef = img.GetPropertyItem(0x0003);
+                            threadInfo.propItemLon = img.GetPropertyItem(0x0004);
+                            threadInfo.propItemAltRef = img.GetPropertyItem(0x0005);
+                            threadInfo.propItemAlt = img.GetPropertyItem(0x0006);
+                            threadInfo.propItemSat = img.GetPropertyItem(0x0008);
+                            threadInfo.propItemDir = img.GetPropertyItem(0x0011);
+                            threadInfo.propItemVel = img.GetPropertyItem(0x000D);
+                            threadInfo.propItemPDop = img.GetPropertyItem(0x000B);
+                            threadInfo.propItemDateTime = img.GetPropertyItem(0x0132);
+                            bmp = new Bitmap(img);
+                            img.Dispose();
+                            stream.Close();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                String s = ex.StackTrace;
+            }
+            object[] o = { threadInfo, bmp };
+            bitmapQueue.Add(o);
+            mre.Set();
+            return r;
+        }
+
+        private async void processImage(object[] item)
+        {
+            try
+            {
+                ThreadInfo threadInfo = item[0] as ThreadInfo;    
+                RecordUtil RecordUtil = new RecordUtil(threadInfo.Record);
+                PropertyItem propItemLat = RecordUtil.getEXIFCoordinate("latitude", threadInfo.propItemLat);
+                PropertyItem propItemLon = RecordUtil.getEXIFCoordinate("longitude", threadInfo.propItemLon);
+                PropertyItem propItemAlt = RecordUtil.getEXIFNumber(threadInfo.propItemAlt, "altitude", 10);
+                PropertyItem propItemLatRef = RecordUtil.getEXIFCoordinateRef("latitude", threadInfo.propItemLatRef);
+                PropertyItem propItemLonRef = RecordUtil.getEXIFCoordinateRef("longitude", threadInfo.propItemLonRef);
+                PropertyItem propItemAltRef = RecordUtil.getEXIFAltitudeRef(threadInfo.propItemAltRef);
+                PropertyItem propItemDir = RecordUtil.getEXIFNumber(threadInfo.propItemDir, "bearing", 10);
+                PropertyItem propItemVel = RecordUtil.getEXIFNumber(threadInfo.propItemVel, "velocity", 100);
+                PropertyItem propItemPDop = RecordUtil.getEXIFNumber(threadInfo.propItemPDop, "pdop", 10);
+                PropertyItem propItemSat = RecordUtil.getEXIFInt(threadInfo.propItemSat, threadInfo.Record.Satellites);
+                PropertyItem propItemDateTime = RecordUtil.getEXIFDateTime(threadInfo.propItemDateTime);
+                RecordUtil = null;
+                Image image = null;
+
+                try
+                {
+                    //do image correction
+                    //CLAHE correction
+
+                    Bitmap bmp = item[1] as Bitmap;
+                    //Image<Bgr, Byte> img = bmp.ToImage<Bgr, byte>();
+                    Image<Bgr, Byte> img = new Image<Bgr, Byte>(bmp);
+                    Mat src = img.Mat;
+                    Image<Bgr, Byte> emguImage = CorrectionUtil.ClaheCorrection(src, 0.5);
+                    //arr.Dispose();
+                    emguImage = CorrectionUtil.GammaCorrection(emguImage);
+                    image = CorrectionUtil.ImageFromEMGUImage(emguImage);
+                    emguImage.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    String s = ex.StackTrace;
+                }
+                image.SetPropertyItem(propItemLat);
+                image.SetPropertyItem(propItemLon);
+                image.SetPropertyItem(propItemLatRef);
+                image.SetPropertyItem(propItemLonRef);
+                image.SetPropertyItem(propItemAlt);
+                image.SetPropertyItem(propItemAltRef);
+                image.SetPropertyItem(propItemDir);
+                image.SetPropertyItem(propItemVel);
+                image.SetPropertyItem(propItemPDop);
+                image.SetPropertyItem(propItemSat);
+                image.SetPropertyItem(propItemDateTime);
+                await saveFile(image, threadInfo.OutPath);
+
+                Interlocked.Increment(ref geotagCount);
+
+                image.Dispose();
+                image = null;
+            }
+            catch (Exception ex)
+            {
+                String s = ex.StackTrace;
+            }
+        }
+
+            private async Task saveFile(Image image, string path)
+        {
+            await Task.Run(() =>
+            {
+                try
+                {
+                    image.Save(path);
+                }
+                catch (Exception ex)
+                {
+                    String err = ex.StackTrace;
+                    Console.WriteLine(err);
+                }
+            });
+        }
+
+        [DllImport("mpr.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern int WNetGetConnection([MarshalAs(UnmanagedType.LPTStr)] string localName,
+       [MarshalAs(UnmanagedType.LPTStr)] StringBuilder remoteName, ref int length);
+
+        public static string GetUNCPath(string originalPath)
+        {
+            StringBuilder sb = new StringBuilder(512);
+            int size = sb.Capacity;
+
+            if (originalPath.Length > 2 && originalPath[1] == ':')
+            {
+                char c = originalPath[0];
+                if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+                {
+                    int error = WNetGetConnection(originalPath.Substring(0, 2), sb, ref size);
+                    if (error == 0)
+                    {
+                        DirectoryInfo dir = new DirectoryInfo(originalPath);
+                        string path = Path.GetFullPath(originalPath).Substring(Path.GetPathRoot(originalPath).Length);
+                        return Path.Combine(sb.ToString().TrimEnd(), path);
+                    }
+                }
+            }
+            return originalPath;
         }
 
         public string updateProgessMessage
@@ -178,6 +537,33 @@ namespace Geotagger_V2
             }
         }
 
+        public int updateGeoTagCount
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref geotagCount, 0, 0);
+
+            }
+        }
+
+        public int updateRecordCount
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref progressRecordCount, 0, 0);
+
+            }
+        }
+
+        public int updateRecordQueueCount
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref progressRecordQueueCount, 0, 0);
+
+            }
+        }
+
         public double updateProgessValue
         {
             get
@@ -186,5 +572,9 @@ namespace Geotagger_V2
 
             }
         }
+
+        
+
+
     }
 }

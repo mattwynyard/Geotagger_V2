@@ -189,6 +189,22 @@ namespace Geotagger_V2
             }
         }
 
+        public Boolean GeoTag { get; set; }
+
+        public string Path { get; set; }
+
+        public string Side { get; set; }
+
+        public int TACode { get; set; }
+
+        public int Road { get; set; }
+
+        public int Carriageway { get; set; }
+
+        public int ERP { get; set; }
+
+        public int FaultID { get; set; }
+
         public string ToFullString()
         {
             StringBuilder s = new StringBuilder();

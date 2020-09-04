@@ -14,7 +14,7 @@ namespace Geotagger_V2
 
         public string Photo { get; set; }
 
-        public string Folder { get; set; }
+        public string PhotoPath { get; set; }
 
         public string File { get; set; }
         public string OutPath { get; set; }

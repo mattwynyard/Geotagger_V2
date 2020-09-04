@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
@@ -16,6 +18,8 @@ namespace Geotagger_V2
         private string mOutputPath;
         private DispatcherTimer dispatcherTimer;
         private GeotagManager manager;
+        private Stopwatch stopwatch;
+        private Boolean timer = false;
         public MainWindow()
         {
             InitializeComponent();
@@ -45,7 +49,6 @@ namespace Geotagger_V2
             } else 
             {
                 FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog();
-                //browseFolderDialog.RestoreDirectory = true;
                 browseFolderDialog.ShowDialog();
                 if (b.Name == "BrowseInput")
                 {
@@ -75,14 +78,19 @@ namespace Geotagger_V2
             
             manager = new GeotagManager();
             dispatcherTimer = new DispatcherTimer();
+            stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             dispatcherTimer.Tick += new EventHandler(DispatcherTimer_Tick);
             dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
             dispatcherTimer.Start();
-
+            Timer();
             Task worker = Task.Factory.StartNew(() =>
             {
                 showProgressBar();
                 manager.photoReader(mInputPath, false);
+                manager.readDatabase(mDBPath, "");
+                manager.writeGeotag(mOutputPath);
                 //
             });
             await Task.WhenAll(worker);
@@ -96,8 +104,32 @@ namespace Geotagger_V2
             ProgessLabel.Content = manager.updateProgessMessage;
             ProgessBar.Value = manager.updateProgessValue;
             PhotoCountLabel.Content = manager.updatePhotoCount;
+            RecordsLabel.Content = manager.updateRecordCount;
+            string value = "Geotag Count: " + manager.updateGeoTagCount;
+            RecordQueueLabel.Content = "Record Queue: " + manager.updateRecordQueueCount;
+            GeotagLabel.Content = value;
+        }
 
-
+        private void Timer()
+        {
+            timer = true;
+            stopwatch = new Stopwatch();
+            stopwatch.Start();
+            Task sw = Task.Factory.StartNew(() =>
+            {
+                while (timer)
+                {
+                    TimeSpan ts = stopwatch.Elapsed;
+                    //TimeSpan time = new TimeSpan(ts.Hours, ts.Minutes, ts.Seconds);
+                    string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                    ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                    Dispatcher.Invoke((Action)(() =>
+                    {
+                        TimeLabel.Content = elapsedTime;
+                    }));
+                    Thread.Sleep(10);
+                }
+            });
         }
 
         private void hideProgressBar()
