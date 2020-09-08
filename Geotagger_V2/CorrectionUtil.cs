@@ -78,7 +78,6 @@ namespace Geotagger_V2
             bitmap.Save(ms, ImageFormat.Jpeg);
             bitmap.Dispose();
             ms.Seek(0, SeekOrigin.Begin);
-
             return Image.FromStream(ms);
         }
 
