@@ -85,13 +85,22 @@ namespace Geotagger_V2
             dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
             dispatcherTimer.Start();
             Timer();
-            Task worker = Task.Factory.StartNew(() =>
+            Task worker = Task.Factory.StartNew(async () =>
             {
                 showProgressBar();
+                progressIndeterminate(true);
                 manager.photoReader(mInputPath, false);
-                manager.readDatabase(mDBPath, "");
-                manager.writeGeotag(mOutputPath);
-                //
+                progressIndeterminate(false);
+                TaskStatus result = manager.readDatabase(mDBPath, "").Result;
+                Console.WriteLine(result);
+                if (result == TaskStatus.RanToCompletion)
+                {
+                    manager.writeGeotag(mOutputPath);
+                }
+                else
+                {
+                    Console.WriteLine(result);
+                }
             });
             await Task.WhenAll(worker);
             //dispatcherTimer.Stop();
@@ -100,14 +109,14 @@ namespace Geotagger_V2
 
         public void DispatcherTimer_Tick(object sender, EventArgs args)
         {
-            Console.WriteLine("tick");
             ProgessLabel.Content = manager.updateProgessMessage;
             ProgessBar.Value = manager.updateProgessValue;
             PhotoCountLabel.Content = manager.updatePhotoCount;
             RecordsLabel.Content = manager.updateRecordCount;
-            string value = "Geotag Count: " + manager.updateGeoTagCount;
-            RecordQueueLabel.Content = "Record Queue: " + manager.updateRecordQueueCount;
-            GeotagLabel.Content = value;
+            GeotagLabel.Content = "Geotag Count: " + manager.updateGeoTagCount;
+            RecordDictLabel.Content = "Record Dictionary: " + manager.updateRecordDictCount;
+            PhotoQueueLabel.Content = "Photo Queue: " + manager.updatePhotoQueueCount;
+            BitmapQueueLabel.Content = "Bitmap Queue: " + manager.updateBitmapQueueCount;
         }
 
         private void Timer()
@@ -145,9 +154,19 @@ namespace Geotagger_V2
             }));
         }
 
-        private void updateProgressLabel(string message)
+        private void progressIndeterminate(Boolean isIndeterminate)
         {
-            ProgessLabel.Content= message;
+            Dispatcher.Invoke((Action)(() => {
+                if (isIndeterminate)
+                {
+                    ProgessBar.IsIndeterminate = true;
+                }
+                else
+                {
+                    ProgessBar.IsIndeterminate = false;
+                }
+
+            }));
         }
     }
 }

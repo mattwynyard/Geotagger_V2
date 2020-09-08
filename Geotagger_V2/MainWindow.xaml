@@ -34,7 +34,18 @@
                     <Label Content="Records:" HorizontalAlignment="Left" Margin="103,351,0,0" VerticalAlignment="Top"/>
                     <Label  Name="RecordsLabel" Content="0" HorizontalAlignment="Left" Margin="163,351,0,0" VerticalAlignment="Top"/>
                     <Label Name="GeotagLabel" Content="Geotagged:" HorizontalAlignment="Left" Margin="105,405,0,0" VerticalAlignment="Top"/>
-                    <Label Name="RecordQueueLabel" Content="Record Queue:" HorizontalAlignment="Left" Margin="521,325,0,0" VerticalAlignment="Top"/>
+                    <Expander Header="Details" HorizontalAlignment="Left" Height="162" Margin="446,308,0,0" VerticalAlignment="Top" Width="217" IsExpanded="True">
+                        <Grid Background="#FFE5E5E5">
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4*"/>
+                                <ColumnDefinition Width="3*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label x:Name="RecordDictLabel" Content="Record Dictionary:" HorizontalAlignment="Left" Margin="6,10,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Width="183"/>
+                            <Label x:Name="PhotoQueueLabel" Content="Photo Queue" HorizontalAlignment="Left" Margin="6,36,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.318,0.459"/>
+                            <Label x:Name="BitmapQueueLabel" Content="Bitmap Queue" HorizontalAlignment="Left" Margin="10,62,0,0" VerticalAlignment="Top"/>
+                        </Grid>
+                    </Expander>
 
                 </Grid>
             </TabItem>
@@ -42,7 +53,8 @@
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
         </TabControl>
-        
+
 
     </Grid>
 </Window>
+
