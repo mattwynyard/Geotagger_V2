@@ -35,7 +35,6 @@ namespace Geotagger_V2
         private Boolean mZip;
         private ConcurrentDictionary<string, Record> recordDict;
         private BlockingCollection<string> photoQueue;
-        private BlockingCollection<ThreadInfo> geotagQueue;
         private BlockingCollection<object[]> bitmapQueue;
         private ProgressObject progress;
 
@@ -56,7 +55,6 @@ namespace Geotagger_V2
             _geotagCount = 0;
             _sizeBitmapQueue = sizeBitmapQueue;
             recordDict = new ConcurrentDictionary<string, Record>();
-            geotagQueue = new BlockingCollection<ThreadInfo>();
             bitmapQueue = new BlockingCollection<object[]>(sizeBitmapQueue);
             progress = new ProgressObject();
         }
@@ -124,7 +122,6 @@ namespace Geotagger_V2
                 }
                 else
                 {
-                    //photoDict = new ConcurrentDictionary<string, string>();
                     photoQueue = new BlockingCollection<string>();
                     string[] files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories);
                     int fileCount = files.Length;
@@ -153,6 +150,14 @@ namespace Geotagger_V2
             Interlocked.Exchange(ref _progressMessage, "Finished");
         }
 
+        /// <summary>
+        /// Establishes connection to access database. Selects all geomarked records using OleDbDataReader.
+        /// Tdds records to queue ready for processing.
+        /// 
+        /// </summary>
+        /// <param name="dbPath">path of the access database</param>
+        /// <param name="inspector">filter query on inspector intials</param>
+        /// <returns></returns>
         public async Task<TaskStatus> readDatabase(string dbPath, string inspector)
         {
             Interlocked.Exchange(ref _progressMessage, "Reading database...");
@@ -195,7 +200,7 @@ namespace Geotagger_V2
                         Record r = buildRecord(row).Result;
                         try
                         {
-                            Boolean success = recordDict.TryAdd(r.PhotoName, r);
+                            bool success = recordDict.TryAdd(r.PhotoName, r);
                             if (success)
                             {
                                 Interlocked.Increment(ref i);
@@ -204,12 +209,16 @@ namespace Geotagger_V2
                                 Interlocked.Exchange(ref _progressRecordDictCount, recordDict.Count);
                             } else
                             {
-                                Console.WriteLine("Failed to add: " + r.PhotoName);
                                 Interlocked.Increment(ref errors);
                                 Interlocked.Exchange(ref _progressRecordDictErrors, errors);
+                                MessageBox.Show("Duplicate record detected\n" + "Photo ID: " + r.PhotoName + "\nDo you wish to continue processing?", 
+                                    "Duplicate record", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
                             }
-
-                        } catch (InvalidOperationException ex)
+                        //TODO add to error dictionary
+                        } catch (ArgumentNullException ex)
+                        {
+                            Console.WriteLine(ex.StackTrace);
+                        } catch (OverflowException ex)
                         {
                             Console.WriteLine(ex.StackTrace);
                         }
@@ -246,7 +255,7 @@ namespace Geotagger_V2
                     try
                     {
                         ThreadInfo threadInfo = new ThreadInfo();
-                        Boolean found;
+                        bool found;
                         string photo = Path.GetFileNameWithoutExtension(item);
                         Record record = null;
                         found = recordDict.TryRemove(photo, out record);
@@ -263,7 +272,8 @@ namespace Geotagger_V2
                         }
                         else
                         {
-                            Console.WriteLine("item not found " + item);
+                            //Console.WriteLine("item not found " + item);
+                            Interlocked.Increment(ref _photosNoRecordCount);
                         }
                     }
                     catch (Exception ex)
@@ -297,7 +307,6 @@ namespace Geotagger_V2
                             {
                                 break;
                             }
-
                         }
                         else
                         {
@@ -450,44 +459,41 @@ namespace Geotagger_V2
                 PropertyItem propItemPDop = RecordUtil.getEXIFNumber(threadInfo.propItemPDop, "pdop", 10);
                 PropertyItem propItemSat = RecordUtil.getEXIFInt(threadInfo.propItemSat, threadInfo.Record.Satellites);
                 PropertyItem propItemDateTime = RecordUtil.getEXIFDateTime(threadInfo.propItemDateTime);
-                RecordUtil = null;
-                Image image = null;
-
+                
                 try
                 {
                     //do image correction
                     //CLAHE correction
                     Bitmap bmp = item[1] as Bitmap;
-                    //Image<Bgr, Byte> img = bmp.ToImage<Bgr, byte>();
+                    //Image<Bgr, Byte> img = bmp.ToImage<Bgr, byte>(); Used for EMGUCV 4.3 error when using this version rolled back to 4.1
                     Image<Bgr, Byte> img = new Image<Bgr, Byte>(bmp);
                     Mat src = img.Mat;
                     Image<Bgr, Byte> emguImage = CorrectionUtil.ClaheCorrection(src, 0.5);
-                    //arr.Dispose();
                     emguImage = CorrectionUtil.GammaCorrection(emguImage);
-                    image = CorrectionUtil.ImageFromEMGUImage(emguImage);
+                    Image image = CorrectionUtil.ImageFromEMGUImage(emguImage);
                     emguImage.Dispose();
+                    image.SetPropertyItem(propItemLat);
+                    image.SetPropertyItem(propItemLon);
+                    image.SetPropertyItem(propItemLatRef);
+                    image.SetPropertyItem(propItemLonRef);
+                    image.SetPropertyItem(propItemAlt);
+                    image.SetPropertyItem(propItemAltRef);
+                    image.SetPropertyItem(propItemDir);
+                    image.SetPropertyItem(propItemVel);
+                    image.SetPropertyItem(propItemPDop);
+                    image.SetPropertyItem(propItemSat);
+                    image.SetPropertyItem(propItemDateTime);
+                    await saveFile(image, threadInfo.OutPath);
+                    Interlocked.Increment(ref _geotagCount);
+                    Interlocked.Exchange(ref _progressBitmapQueueCount, bitmapQueue.Count);
+                    image.Dispose();
+                    image = null;
                 }
                 catch (Exception ex)
                 {
                     String s = ex.StackTrace;
                 }
-                image.SetPropertyItem(propItemLat);
-                image.SetPropertyItem(propItemLon);
-                image.SetPropertyItem(propItemLatRef);
-                image.SetPropertyItem(propItemLonRef);
-                image.SetPropertyItem(propItemAlt);
-                image.SetPropertyItem(propItemAltRef);
-                image.SetPropertyItem(propItemDir);
-                image.SetPropertyItem(propItemVel);
-                image.SetPropertyItem(propItemPDop);
-                image.SetPropertyItem(propItemSat);
-                image.SetPropertyItem(propItemDateTime);
-                await saveFile(image, threadInfo.OutPath);
-
-                Interlocked.Increment(ref _geotagCount);
-
-                image.Dispose();
-                image = null;
+                
             }
             catch (Exception ex)
             {
@@ -598,6 +604,14 @@ namespace Geotagger_V2
             get
             {
                 return Interlocked.CompareExchange(ref _progressValue, 0, 0);
+            }
+        }
+
+        public double updateNoRecordCount
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref _photosNoRecordCount, 0, 0);
             }
         }
     }

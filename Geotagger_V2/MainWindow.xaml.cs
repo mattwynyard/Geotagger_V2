@@ -20,10 +20,12 @@ namespace Geotagger_V2
         private GeotagManager manager;
         private Stopwatch stopwatch;
         private Boolean timer = false;
+        private int startCount = 0;
         public MainWindow()
         {
             InitializeComponent();
-            ProgessBar.Visibility = Visibility.Hidden;
+            ProgressBar1.Visibility = Visibility.Hidden;
+            ProgressText.Visibility = Visibility.Hidden;
 
         }
 
@@ -109,14 +111,19 @@ namespace Geotagger_V2
 
         public void DispatcherTimer_Tick(object sender, EventArgs args)
         {
-            ProgessLabel.Content = manager.updateProgessMessage;
-            ProgessBar.Value = manager.updateProgessValue;
+            int geotagCount = manager.updateGeoTagCount;
+            int count = geotagCount - startCount;
+            SpeedLabel.Content = "Items/sec: " + count;
+            startCount = geotagCount;
+            ProgressLabel.Content = manager.updateProgessMessage;
+            ProgressBar1.Value = manager.updateProgessValue;
             PhotoCountLabel.Content = "Photos Found: " + manager.updatePhotoCount;
             RecordCountLabel.Content = "Records to process: " + manager.updateRecordCount;
             GeotagLabel.Content = "Geotag Count: " + manager.updateGeoTagCount;
             RecordDictLabel.Content = "Record Dictionary: " + manager.updateRecordDictCount;
             PhotoQueueLabel.Content = "Photo Queue: " + manager.updatePhotoQueueCount;
             BitmapQueueLabel.Content = "Bitmap Queue: " + manager.updateBitmapQueueCount;
+            NoRecordLabel.Content = "Photos with no record: " + manager.updateNoRecordCount;
         }
 
         private void Timer()
@@ -124,17 +131,19 @@ namespace Geotagger_V2
             timer = true;
             stopwatch = new Stopwatch();
             stopwatch.Start();
+            
             Task sw = Task.Factory.StartNew(() =>
             {
+                
                 while (timer)
                 {
                     TimeSpan ts = stopwatch.Elapsed;
-                    //TimeSpan time = new TimeSpan(ts.Hours, ts.Minutes, ts.Seconds);
                     string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
                     ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
                     Dispatcher.Invoke((Action)(() =>
                     {
                         TimeLabel.Content = elapsedTime;
+
                     }));
                     Thread.Sleep(10);
                 }
@@ -144,13 +153,14 @@ namespace Geotagger_V2
         private void hideProgressBar()
         {
             Dispatcher.Invoke((Action)(() => {
-                ProgessBar.Visibility = Visibility.Hidden;
+                ProgressBar1.Visibility = Visibility.Hidden;
             }));
         }
         private void showProgressBar()
         {
             Dispatcher.Invoke((Action)(() => {
-                ProgessBar.Visibility = Visibility.Visible;
+                ProgressBar1.Visibility = Visibility.Visible;
+                ProgressText.Visibility = Visibility.Visible;
             }));
         }
 
@@ -159,11 +169,11 @@ namespace Geotagger_V2
             Dispatcher.Invoke((Action)(() => {
                 if (isIndeterminate)
                 {
-                    ProgessBar.IsIndeterminate = true;
+                    ProgressBar1.IsIndeterminate = true;
                 }
                 else
                 {
-                    ProgessBar.IsIndeterminate = false;
+                    ProgressBar1.IsIndeterminate = false;
                 }
 
             }));
