@@ -21,30 +21,23 @@ namespace Geotagger_V2
 {
     public class GeotagManager
     {
-        private string progressMessage = "";
-        private double progressValue = 0;
-        private int progressRecordCount = 0;
-        private int progressRecordDictCount = 0;
-        private int progressPhotoQueueCount = 0;
-        private int progressBitmapQueueCount = 0;
-        private int progressRecordDictErrors = 0;
-        private int photoCount = 0;
-        private int geotagCount;
-        private int sizeRecordQueue;
-        private int sizeBitmapQueue;
+        private string _progressMessage = "";
+        private double _progressValue = 0;
+        private int _progressRecordCount = 0;
+        private int _progressRecordDictCount = 0;
+        private int _progressPhotoQueueCount = 0;
+        private int _progressBitmapQueueCount = 0;
+        private int _progressRecordDictErrors = 0;
+        private int _photoCount = 0;
+        private int _photosNoRecordCount = 0;
+        private int _geotagCount;
+        private int _sizeBitmapQueue;
         private Boolean mZip;
-        private Stopwatch stopwatch;
         private ConcurrentDictionary<string, Record> recordDict;
         private BlockingCollection<string> photoQueue;
-        //private BlockingCollection<Record> recordQueue;
         private BlockingCollection<ThreadInfo> geotagQueue;
-        //private ConcurrentDictionary<string, string> photoDict;
-        private ConcurrentDictionary<string, Record> noPhotoDict;
         private BlockingCollection<object[]> bitmapQueue;
-        private ConcurrentDictionary<string, Exception> errorDict;
-        private string connectionString;
         private ProgressObject progress;
-        private Boolean geotagging = false;
 
         private static ManualResetEvent mre = new ManualResetEvent(false);
         private static readonly object obj = new object();
@@ -53,24 +46,18 @@ namespace Geotagger_V2
         {
             intialise();
         }
-        public GeotagManager(int sizeRecordQueue, int sizeBitmapQueue)
+        public GeotagManager(int sizeBitmapQueue)
         {
-            intialise(sizeRecordQueue, sizeBitmapQueue);
+            intialise(sizeBitmapQueue);
         }
 
-        private void intialise(int sizeRecordQueue = 50000, int sizeBitmapQueue = 50)
+        private void intialise(int sizeBitmapQueue = 50)
         {
-            geotagCount = 0;
-            this.sizeRecordQueue = sizeRecordQueue;
-            this.sizeBitmapQueue = sizeBitmapQueue;
+            _geotagCount = 0;
+            _sizeBitmapQueue = sizeBitmapQueue;
             recordDict = new ConcurrentDictionary<string, Record>();
-            
-            //recordQueue = new BlockingCollection<Record>(sizeRecordQueue);
             geotagQueue = new BlockingCollection<ThreadInfo>();
-            noPhotoDict = new ConcurrentDictionary<string, Record>();
             bitmapQueue = new BlockingCollection<object[]>(sizeBitmapQueue);
-            errorDict = new ConcurrentDictionary<string, Exception>();
-            stopwatch = Stopwatch.StartNew();
             progress = new ProgressObject();
         }
 
@@ -99,7 +86,7 @@ namespace Geotagger_V2
         public void photoReader(string path, Boolean zip)
         {
             string initialMessage = "Searching directories...";
-            Interlocked.Exchange(ref progressMessage, initialMessage);
+            Interlocked.Exchange(ref _progressMessage, initialMessage);
             mZip = zip;
             Task search = Task.Factory.StartNew(() =>
             {
@@ -134,7 +121,6 @@ namespace Geotagger_V2
                             }
                         }
                     }
-
                 }
                 else
                 {
@@ -142,23 +128,20 @@ namespace Geotagger_V2
                     photoQueue = new BlockingCollection<string>();
                     string[] files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories);
                     int fileCount = files.Length;
-                    Interlocked.Exchange(ref photoCount, fileCount);
+                    Interlocked.Exchange(ref _photoCount, fileCount);
                     int i = 0;
                     string message = "Building photo queue...";
-                    Interlocked.Exchange(ref progressMessage, message);
+                    Interlocked.Exchange(ref _progressMessage, message);
                     foreach (var file in files)
                     {
-                        //string key = Path.GetFileNameWithoutExtension(file);
-                        //bool added = photoDict.TryAdd(key, file);
                         Boolean added = photoQueue.TryAdd(file);
-                        
                         if (added)
                         {
                             i++;
                             double newvalue = ((double)i / (double)fileCount) * 100;
-                            Interlocked.Exchange(ref photoCount, i);
-                            Interlocked.Exchange(ref progressValue, newvalue);
-                            Interlocked.Exchange(ref progressPhotoQueueCount, photoQueue.Count);
+                            Interlocked.Exchange(ref _photoCount, i);
+                            Interlocked.Exchange(ref _progressValue, newvalue);
+                            Interlocked.Exchange(ref _progressPhotoQueueCount, photoQueue.Count);
                         } else
                         {
                             Console.WriteLine("failed to add to photo dictionary");
@@ -167,19 +150,18 @@ namespace Geotagger_V2
                 }
             });
             Task.WaitAll(search);
-            Interlocked.Exchange(ref progressMessage, "Finished");
+            Interlocked.Exchange(ref _progressMessage, "Finished");
         }
 
         public async Task<TaskStatus> readDatabase(string dbPath, string inspector)
         {
-            Interlocked.Exchange(ref progressMessage, "Reading database...");
-            Interlocked.Exchange(ref progressValue, 0);
+            Interlocked.Exchange(ref _progressMessage, "Reading database...");
+            Interlocked.Exchange(ref _progressValue, 0);
             string _inspector = Utilities.getInspector(inspector);
             string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
                 "Microsoft.Jet.OLEDB.4.0", dbPath, 5);
             OleDbConnection connection = new OleDbConnection(connectionString);
             string strSQL;
-            //string strRecord;
             string lengthSQL; //sql count string
             if (_inspector == "")
             {
@@ -194,14 +176,14 @@ namespace Geotagger_V2
             OleDbCommand commandLength = new OleDbCommand(lengthSQL, connection);
             connection.Open();
             int recordCount = Convert.ToInt32(commandLength.ExecuteScalar());
-            Interlocked.Exchange(ref progressRecordCount, recordCount);
+            Interlocked.Exchange(ref _progressRecordCount, recordCount);
             commandLength.Dispose();
             
             Task taskreader = Task.Factory.StartNew(() =>
             {
                 int i = 0;
                 int errors = 0;
-                Interlocked.Exchange(ref progressMessage, "Building Record Dictionary...");
+                Interlocked.Exchange(ref _progressMessage, "Building Record Dictionary...");
                 OleDbCommand command = new OleDbCommand(strSQL, connection);
                 using (OleDbDataReader reader = command.ExecuteReader())
                 {
@@ -218,36 +200,34 @@ namespace Geotagger_V2
                             {
                                 Interlocked.Increment(ref i);
                                 double newvalue = ((double)i / (double)recordCount) * 100;
-                                Interlocked.Exchange(ref progressValue, newvalue);
-                                Interlocked.Exchange(ref progressRecordDictCount, recordDict.Count);
+                                Interlocked.Exchange(ref _progressValue, newvalue);
+                                Interlocked.Exchange(ref _progressRecordDictCount, recordDict.Count);
                             } else
                             {
                                 Console.WriteLine("Failed to add: " + r.PhotoName);
                                 Interlocked.Increment(ref errors);
-                                Interlocked.Exchange(ref progressRecordDictErrors, errors);
+                                Interlocked.Exchange(ref _progressRecordDictErrors, errors);
                             }
 
                         } catch (InvalidOperationException ex)
                         {
                             Console.WriteLine(ex.StackTrace);
                         }
-                        
-                       
                     }
                     reader.Close();
                     command.Dispose();
                 }
                 double finalvalue = ((double)i / (double)recordCount) * 100;
-                Interlocked.Exchange(ref progressValue, finalvalue);
-                Interlocked.Exchange(ref progressRecordDictCount, recordDict.Count);
+                Interlocked.Exchange(ref _progressValue, finalvalue);
+                Interlocked.Exchange(ref _progressRecordDictCount, recordDict.Count);
             });
             await Task.WhenAll(taskreader);
             try
             {
                 connection.Close();
-            } catch
+            } catch (Exception ex)
             {
-
+                Console.WriteLine(ex.StackTrace);
             }
             return taskreader.Status;
             
@@ -255,9 +235,9 @@ namespace Geotagger_V2
 
         public async void writeGeotag(string outPath)
         {
-            Interlocked.Exchange(ref progressValue, 0);
+            Interlocked.Exchange(ref _progressValue, 0);
             
-            Interlocked.Exchange(ref progressMessage, "Writing Geotags...");
+            Interlocked.Exchange(ref _progressMessage, "Writing Geotags...");
             Task producer = Task.Factory.StartNew(() =>
             {
                 int i = 0;
@@ -270,7 +250,6 @@ namespace Geotagger_V2
                         string photo = Path.GetFileNameWithoutExtension(item);
                         Record record = null;
                         found = recordDict.TryRemove(photo, out record);
-                        //dictCount = photoDict.Count;
                         if (found)
                         {
                             threadInfo.PhotoPath = item;
@@ -280,7 +259,7 @@ namespace Geotagger_V2
                             threadInfo.Photo = photo;
                             Record newRecord = null;
                             newRecord = ProcessFile(threadInfo);
-                            Interlocked.Exchange(ref progressRecordDictCount, recordDict.Count);
+                            Interlocked.Exchange(ref _progressRecordDictCount, recordDict.Count);
                         }
                         else
                         {
@@ -292,9 +271,9 @@ namespace Geotagger_V2
                         String s = ex.Message;
                     }
                     Interlocked.Increment(ref i);
-                    double newvalue = ((double)i / (double)photoCount) * 100;
-                    Interlocked.Exchange(ref progressValue, newvalue);
-                    Interlocked.Exchange(ref progressPhotoQueueCount, photoQueue.Count);
+                    double newvalue = ((double)i / (double)_photoCount) * 100;
+                    Interlocked.Exchange(ref _progressValue, newvalue);
+                    Interlocked.Exchange(ref _progressPhotoQueueCount, photoQueue.Count);
                 }
                 bitmapQueue.CompleteAdding();
                 mre.Set();
@@ -333,7 +312,7 @@ namespace Geotagger_V2
             });
 
             await Task.WhenAll(producer, consumer);
-            Interlocked.Exchange(ref progressBitmapQueueCount, bitmapQueue.Count);
+            Interlocked.Exchange(ref _progressBitmapQueueCount, bitmapQueue.Count);
         }
 
         /// <summary>
@@ -449,7 +428,7 @@ namespace Geotagger_V2
             }
             object[] o = { threadInfo, bmp };
             bitmapQueue.Add(o);
-            Interlocked.Exchange(ref progressBitmapQueueCount, bitmapQueue.Count);
+            Interlocked.Exchange(ref _progressBitmapQueueCount, bitmapQueue.Count);
             mre.Set();
             return r;
         }
@@ -478,7 +457,6 @@ namespace Geotagger_V2
                 {
                     //do image correction
                     //CLAHE correction
-
                     Bitmap bmp = item[1] as Bitmap;
                     //Image<Bgr, Byte> img = bmp.ToImage<Bgr, byte>();
                     Image<Bgr, Byte> img = new Image<Bgr, Byte>(bmp);
@@ -506,7 +484,7 @@ namespace Geotagger_V2
                 image.SetPropertyItem(propItemDateTime);
                 await saveFile(image, threadInfo.OutPath);
 
-                Interlocked.Increment(ref geotagCount);
+                Interlocked.Increment(ref _geotagCount);
 
                 image.Dispose();
                 image = null;
@@ -563,7 +541,7 @@ namespace Geotagger_V2
         {
             get
             {
-                return Interlocked.CompareExchange(ref progressMessage, "", "");
+                return Interlocked.CompareExchange(ref _progressMessage, "", "");
             }
         }
 
@@ -571,7 +549,7 @@ namespace Geotagger_V2
         {
             get
             {
-                return Interlocked.CompareExchange(ref photoCount, 0, 0);
+                return Interlocked.CompareExchange(ref _photoCount, 0, 0);
             }
         }
 
@@ -579,7 +557,7 @@ namespace Geotagger_V2
         {
             get
             {
-                return Interlocked.CompareExchange(ref geotagCount, 0, 0);
+                return Interlocked.CompareExchange(ref _geotagCount, 0, 0);
             }
         }
 
@@ -587,7 +565,7 @@ namespace Geotagger_V2
         {
             get
             {
-                return Interlocked.CompareExchange(ref progressRecordCount, 0, 0);
+                return Interlocked.CompareExchange(ref _progressRecordCount, 0, 0);
             }
         }
 
@@ -595,7 +573,7 @@ namespace Geotagger_V2
         {
             get
             {
-                return Interlocked.CompareExchange(ref progressRecordDictCount, 0, 0);
+                return Interlocked.CompareExchange(ref _progressRecordDictCount, 0, 0);
             }
         }
 
@@ -603,7 +581,7 @@ namespace Geotagger_V2
         {
             get
             {
-                return Interlocked.CompareExchange(ref progressBitmapQueueCount, 0, 0);
+                return Interlocked.CompareExchange(ref _progressBitmapQueueCount, 0, 0);
             }
         }
 
@@ -611,7 +589,7 @@ namespace Geotagger_V2
         {
             get
             {
-                return Interlocked.CompareExchange(ref progressPhotoQueueCount, 0, 0);
+                return Interlocked.CompareExchange(ref _progressPhotoQueueCount, 0, 0);
             }
         }
 
@@ -619,7 +597,7 @@ namespace Geotagger_V2
         {
             get
             {
-                return Interlocked.CompareExchange(ref progressValue, 0, 0);
+                return Interlocked.CompareExchange(ref _progressValue, 0, 0);
             }
         }
     }
