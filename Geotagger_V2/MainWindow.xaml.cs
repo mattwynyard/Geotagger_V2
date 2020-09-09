@@ -111,8 +111,8 @@ namespace Geotagger_V2
         {
             ProgessLabel.Content = manager.updateProgessMessage;
             ProgessBar.Value = manager.updateProgessValue;
-            PhotoCountLabel.Content = manager.updatePhotoCount;
-            RecordsLabel.Content = manager.updateRecordCount;
+            PhotoCountLabel.Content = "Photos Found: " + manager.updatePhotoCount;
+            RecordCountLabel.Content = "Records to process: " + manager.updateRecordCount;
             GeotagLabel.Content = "Geotag Count: " + manager.updateGeoTagCount;
             RecordDictLabel.Content = "Record Dictionary: " + manager.updateRecordDictCount;
             PhotoQueueLabel.Content = "Photo Queue: " + manager.updatePhotoQueueCount;
