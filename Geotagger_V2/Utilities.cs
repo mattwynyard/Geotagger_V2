@@ -21,7 +21,6 @@ namespace Geotagger_V2
         }
     }
 
-
     public static class Utilities
     {
         public static string getInspector(string inspector)
@@ -60,6 +59,7 @@ namespace Geotagger_V2
             }
             catch (ArgumentOutOfRangeException ex)
             {
+                Console.WriteLine(ex.StackTrace);
                 return new DateTime();
             }
         }
@@ -73,8 +73,9 @@ namespace Geotagger_V2
                 int i = Int32.Parse(s);
                 return i;
             }
-            catch (FormatException e)
+            catch (FormatException ex)
             {
+                Console.WriteLine(ex.StackTrace);
                 return -1;
             }
         }

@@ -87,8 +87,13 @@ namespace Geotagger_V2
             dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
             dispatcherTimer.Start();
             Timer();
-            Task worker = Task.Factory.StartNew(async () =>
+            BrowseDB.IsEnabled = false;
+            BrowseInput.IsEnabled = false;
+            BrowseOutput.IsEnabled = false;
+            Geotag.IsEnabled = false;
+            Task worker = Task.Factory.StartNew(() =>
             {
+                
                 showProgressBar();
                 progressIndeterminate(true);
                 manager.photoReader(mInputPath, false);
@@ -97,7 +102,14 @@ namespace Geotagger_V2
                 Console.WriteLine(result);
                 if (result == TaskStatus.RanToCompletion)
                 {
-                    manager.writeGeotag(mOutputPath);
+                    TaskStatus consumerStatus = manager.writeGeotag(mOutputPath).Result;
+                    if (consumerStatus == TaskStatus.RanToCompletion)
+                    {
+                        
+                    } else
+                    {
+                        Console.WriteLine(consumerStatus);
+                    }
                 }
                 else
                 {
@@ -105,8 +117,19 @@ namespace Geotagger_V2
                 }
             });
             await Task.WhenAll(worker);
-            //dispatcherTimer.Stop();
-            //hideProgressBar();
+            BrowseDB.IsEnabled = true;
+            BrowseInput.IsEnabled = true;
+            BrowseOutput.IsEnabled = true;
+            Geotag.IsEnabled = true;
+            int count = manager.updateBitmapQueueCount;
+            while (count > 0)
+            {
+                count = manager.updateBitmapQueueCount;
+                Thread.Sleep(1000);
+            }
+            dispatcherTimer.Stop();
+            hideProgressBar();
+            timer = false;
         }
 
         public void DispatcherTimer_Tick(object sender, EventArgs args)
@@ -154,6 +177,8 @@ namespace Geotagger_V2
         {
             Dispatcher.Invoke((Action)(() => {
                 ProgressBar1.Visibility = Visibility.Hidden;
+                ProgressText.Visibility = Visibility.Hidden;
+                ProgressLabel.Visibility = Visibility.Hidden;
             }));
         }
         private void showProgressBar()
@@ -161,6 +186,7 @@ namespace Geotagger_V2
             Dispatcher.Invoke((Action)(() => {
                 ProgressBar1.Visibility = Visibility.Visible;
                 ProgressText.Visibility = Visibility.Visible;
+                ProgressLabel.Visibility = Visibility.Visible;
             }));
         }
 
