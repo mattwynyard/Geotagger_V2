@@ -77,8 +77,9 @@ namespace Geotagger_V2
         /// <param name="e">click event</param>
         private async void Geotag_Click(object sender, RoutedEventArgs e)
         {
-            
-            manager = new GeotagManager();
+
+            manager = GeotagManager.Instance(50);
+            //manager = new GeotagManager();
             dispatcherTimer = new DispatcherTimer();
             stopwatch = new Stopwatch();
             stopwatch.Start();

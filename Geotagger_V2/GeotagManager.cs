@@ -37,17 +37,11 @@ namespace Geotagger_V2
         private BlockingCollection<object[]> bitmapQueue;
         private static ManualResetEvent mre = new ManualResetEvent(false);
 
-        public GeotagManager()
-        {
-            intialise();
-        }
-        public GeotagManager(int sizeBitmapQueue)
-        {
-            intialise(sizeBitmapQueue);
-        }
+        private static GeotagManager _instance;
 
-        private void intialise(int sizeBitmapQueue = 50)
+        protected GeotagManager(int sizeBitmapQueue)
         {
+            //intialise(sizeBitmapQueue);
             _geotagCount = 0;
             _progressMessage = "";
             _progressValue = 0;
@@ -60,6 +54,16 @@ namespace Geotagger_V2
             _photosNoRecordCount = 0;
             recordDict = new ConcurrentDictionary<string, Record>();
             bitmapQueue = new BlockingCollection<object[]>(sizeBitmapQueue);
+        }
+
+        public static GeotagManager Instance(int sizeBitmapQueue = 50)
+        {
+            if (_instance == null)
+            {
+                _instance = new GeotagManager(sizeBitmapQueue);
+            }
+
+            return _instance;
         }
 
         //public BlockingCollection<string> buildQueue(string path)
