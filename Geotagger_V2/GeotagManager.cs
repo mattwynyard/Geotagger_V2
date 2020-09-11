@@ -219,8 +219,7 @@ namespace Geotagger_V2
                             {
                                 Interlocked.Increment(ref errors);
                                 Interlocked.Exchange(ref _progressRecordDictErrors, errors);
-                                MessageBox.Show("Duplicate record detected\n" + "Photo ID: " + r.PhotoName + "\nDo you wish to continue processing?", 
-                                    "Duplicate record", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+
                             }
                         //TODO add to error dictionary
                         } catch (ArgumentNullException ex)

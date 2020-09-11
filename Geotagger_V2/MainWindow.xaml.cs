@@ -92,6 +92,8 @@ namespace Geotagger_V2
             BrowseInput.IsEnabled = false;
             BrowseOutput.IsEnabled = false;
             Geotag.IsEnabled = false;
+            var source = new CancellationTokenSource();
+            CancellationToken token = source.Token;
             Task worker = Task.Factory.StartNew(() =>
             {
                 
@@ -101,22 +103,32 @@ namespace Geotagger_V2
                 progressIndeterminate(false);
                 TaskStatus result = manager.readDatabase(mDBPath, "").Result;
                 Console.WriteLine(result);
+                
                 if (result == TaskStatus.RanToCompletion)
                 {
-                    TaskStatus consumerStatus = manager.writeGeotag(mOutputPath).Result;
-                    if (consumerStatus == TaskStatus.RanToCompletion)
+                    if (manager.updateDuplicateCount == 0)
                     {
-                        
+                       TaskStatus consumerStatus = manager.writeGeotag(mOutputPath).Result;
+                        if (consumerStatus == TaskStatus.RanToCompletion)
+                        {
+
+                        }
+                        else
+                        {
+                            Console.WriteLine(consumerStatus);
+                        }
                     } else
                     {
-                        Console.WriteLine(consumerStatus);
+                        source.Cancel();
                     }
+                    if (token.IsCancellationRequested)
+                    token.ThrowIfCancellationRequested();
                 }
                 else
                 {
                     Console.WriteLine(result);
                 }
-            });
+            }, token);
             await Task.WhenAll(worker);
             BrowseDB.IsEnabled = true;
             BrowseInput.IsEnabled = true;
