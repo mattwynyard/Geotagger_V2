@@ -148,6 +148,7 @@ namespace Geotagger_V2
             PhotoQueueLabel.Content = "Photo Queue: " + manager.updatePhotoQueueCount;
             BitmapQueueLabel.Content = "Bitmap Queue: " + manager.updateBitmapQueueCount;
             NoRecordLabel.Content = "Photos with no record: " + manager.updateNoRecordCount;
+            DuplicateLabel.Content = "Duplicate Records: " + manager.updateDuplicateCount;
         }
 
         private void Timer()

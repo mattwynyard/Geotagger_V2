@@ -624,5 +624,13 @@ namespace Geotagger_V2
                 return Interlocked.CompareExchange(ref _photosNoRecordCount, 0, 0);
             }
         }
+
+        public double updateDuplicateCount
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref _progressRecordDictErrors, 0, 0);
+            }
+        }
     }
 }
