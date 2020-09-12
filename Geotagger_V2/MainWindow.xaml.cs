@@ -111,7 +111,11 @@ namespace Geotagger_V2
                        TaskStatus consumerStatus = manager.writeGeotag(mOutputPath).Result;
                         if (consumerStatus == TaskStatus.RanToCompletion)
                         {
+                            Dispatcher.Invoke((Action)(() =>
+                            {
+                                refreshUI();
 
+                            }));
                         }
                         else
                         {
@@ -141,7 +145,7 @@ namespace Geotagger_V2
                 Thread.Sleep(1000);
             }
             dispatcherTimer.Stop();
-            hideProgressBar();
+            //hideProgressBar();
             timer = false;
         }
 
@@ -151,6 +155,21 @@ namespace Geotagger_V2
             int count = geotagCount - startCount;
             SpeedLabel.Content = "Items/sec: " + count;
             startCount = geotagCount;
+            refreshUI();
+            //ProgressLabel.Content = manager.updateProgessMessage;
+            //ProgressBar1.Value = manager.updateProgessValue;
+            //PhotoCountLabel.Content = "Photos Found: " + manager.updatePhotoCount;
+            //RecordCountLabel.Content = "Records to process: " + manager.updateRecordCount;
+            //GeotagLabel.Content = "Geotag Count: " + manager.updateGeoTagCount;
+            //RecordDictLabel.Content = "Record Dictionary: " + manager.updateRecordDictCount;
+            //PhotoQueueLabel.Content = "Photo Queue: " + manager.updatePhotoQueueCount;
+            //BitmapQueueLabel.Content = "Bitmap Queue: " + manager.updateBitmapQueueCount;
+            //NoRecordLabel.Content = "Photos with no record: " + manager.updateNoRecordCount;
+            //DuplicateLabel.Content = "Duplicate Records: " + manager.updateDuplicateCount;
+        }
+
+        private void refreshUI()
+        {
             ProgressLabel.Content = manager.updateProgessMessage;
             ProgressBar1.Value = manager.updateProgessValue;
             PhotoCountLabel.Content = "Photos Found: " + manager.updatePhotoCount;
@@ -161,6 +180,7 @@ namespace Geotagger_V2
             BitmapQueueLabel.Content = "Bitmap Queue: " + manager.updateBitmapQueueCount;
             NoRecordLabel.Content = "Photos with no record: " + manager.updateNoRecordCount;
             DuplicateLabel.Content = "Duplicate Records: " + manager.updateDuplicateCount;
+            PhotoErrorLabel.Content = "Photo Name Errors: " + manager.updatePhotoNameError;
         }
 
         private void Timer()

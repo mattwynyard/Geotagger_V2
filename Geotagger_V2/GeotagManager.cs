@@ -31,6 +31,7 @@ namespace Geotagger_V2
         private int _photoCount;
         private int _photosNoRecordCount;
         private int _geotagCount;
+        private int _photoNameError;
         private Boolean mZip;
         private ConcurrentDictionary<string, Record> recordDict;
         private BlockingCollection<string> photoQueue;
@@ -52,6 +53,7 @@ namespace Geotagger_V2
             _progressRecordDictErrors = 0;
             _photoCount = 0;
             _photosNoRecordCount = 0;
+            _photoNameError = 0;
             recordDict = new ConcurrentDictionary<string, Record>();
             bitmapQueue = new BlockingCollection<object[]>(sizeBitmapQueue);
         }
@@ -151,10 +153,10 @@ namespace Geotagger_V2
                             Console.WriteLine("failed to add to photo dictionary");
                         }
                     }
+                    photoQueue.CompleteAdding();
                 }
             });
             Task.WaitAll(search);
-            photoQueue.CompleteAdding();
             Interlocked.Exchange(ref _progressMessage, "Finished");
         }
 
@@ -267,14 +269,22 @@ namespace Geotagger_V2
                         found = recordDict.TryRemove(photo, out record);
                         if (found)
                         {
-                            threadInfo.PhotoPath = item;
-                            threadInfo.Zip = mZip;
-                            threadInfo.OutPath = outPath;
-                            threadInfo.Record = record;
-                            threadInfo.Photo = photo;
-                            Record newRecord = null;
-                            newRecord = ProcessFile(threadInfo);
-                            Interlocked.Exchange(ref _progressRecordDictCount, recordDict.Count);
+                            if (record.PhotoRename == null || record.PhotoRename == "") //empty file rename
+                            {
+                                Interlocked.Increment(ref _photoNameError);
+
+                            } else
+                            {
+                                threadInfo.PhotoPath = item;
+                                threadInfo.Zip = mZip;
+                                threadInfo.OutPath = outPath;
+                                threadInfo.Record = record;
+                                threadInfo.Photo = photo;
+                                Record newRecord = null;
+                                newRecord = ProcessFile(threadInfo);
+                                Interlocked.Exchange(ref _progressRecordDictCount, recordDict.Count);
+                            }
+                            
                         }
                         else
                         {
@@ -328,6 +338,7 @@ namespace Geotagger_V2
             });
             
             await Task.WhenAll(producer, consumer);
+            Interlocked.Exchange(ref _progressBitmapQueueCount, bitmapQueue.Count);
             Interlocked.Exchange(ref _progressMessage, "Finished!");
             return consumer.Status;
         }
@@ -616,7 +627,7 @@ namespace Geotagger_V2
             }
         }
 
-        public double updateNoRecordCount
+        public int updateNoRecordCount
         {
             get
             {
@@ -624,7 +635,15 @@ namespace Geotagger_V2
             }
         }
 
-        public double updateDuplicateCount
+        public int updatePhotoNameError
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref _photoNameError, 0, 0);
+            }
+        }
+
+        public int updateDuplicateCount
         {
             get
             {
