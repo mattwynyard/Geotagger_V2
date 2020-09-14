@@ -85,7 +85,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="CorrectionUtil.cs" />
+    <Compile Include="GeotagManger.cs" />
+    <Compile Include="LogWriter.cs" />
     <Compile Include="ProgressObject.cs" />
+    <Compile Include="GTReader.cs" />
     <Compile Include="Record.cs" />
     <Compile Include="RecordUtil.cs" />
     <Compile Include="ThreadInfo.cs" />
@@ -98,7 +101,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="GeotagManager.cs" />
+    <Compile Include="GTWriter.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

@@ -16,8 +16,9 @@ namespace Geotagger_V2
         private string mDBPath;
         private string mInputPath;
         private string mOutputPath;
+        private string mInputReadPath;
         private DispatcherTimer dispatcherTimer;
-        private GeotagManager manager;
+        private GTWriter manager;
         private Stopwatch stopwatch;
         private Boolean timer = false;
         private int startCount = 0;
@@ -52,21 +53,39 @@ namespace Geotagger_V2
             {
                 FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog();
                 browseFolderDialog.ShowDialog();
-                if (b.Name == "BrowseInput")
+                if (TabItemWrite.IsSelected) //write
+                {
+                    if (b.Name == "BrowseInput")
+                    {
+                        if (browseFolderDialog.SelectedPath != "")
+                        {
+                            txtBoxInput.Text = mInputPath = browseFolderDialog.SelectedPath;
+                        }
+                    }
+                    else
+                    {
+                        if (browseFolderDialog.SelectedPath != "")
+                        {
+                            txtBoxOutput.Text = mOutputPath = browseFolderDialog.SelectedPath;
+                        }
+                    }
+                } else //read
                 {
                     if (browseFolderDialog.SelectedPath != "")
                     {
-                        txtBoxInput.Text = mInputPath = browseFolderDialog.SelectedPath;
+                        txtBoxPhotoRead.Text = mInputPath = browseFolderDialog.SelectedPath;
                     }
-                } else
-                {
-                    if (browseFolderDialog.SelectedPath != "")
-                    {
-                        txtBoxOutput.Text = mOutputPath = browseFolderDialog.SelectedPath;
-                    }
-
                 }
                    
+            }
+        }
+
+        private void GeotagRead_Click(object sender, RoutedEventArgs e)
+        {
+            Console.WriteLine("click");
+            if (manager == null)
+            {
+                manager = GTWriter.Instance(50);
             }
         }
 
@@ -78,12 +97,10 @@ namespace Geotagger_V2
         private async void Geotag_Click(object sender, RoutedEventArgs e)
         {
 
-            manager = GeotagManager.Instance(50);
-            //manager = new GeotagManager();
+            manager = GTWriter.Instance(50);
             dispatcherTimer = new DispatcherTimer();
             stopwatch = new Stopwatch();
             stopwatch.Start();
-
             dispatcherTimer.Tick += new EventHandler(DispatcherTimer_Tick);
             dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
             dispatcherTimer.Start();
@@ -96,7 +113,6 @@ namespace Geotagger_V2
             CancellationToken token = source.Token;
             Task worker = Task.Factory.StartNew(() =>
             {
-                
                 showProgressBar();
                 progressIndeterminate(true);
                 manager.photoReader(mInputPath, false);
@@ -138,17 +154,20 @@ namespace Geotagger_V2
             BrowseInput.IsEnabled = true;
             BrowseOutput.IsEnabled = true;
             Geotag.IsEnabled = true;
-            int count = manager.updateBitmapQueueCount;
-            while (count > 0)
-            {
-                count = manager.updateBitmapQueueCount;
-                Thread.Sleep(1000);
-            }
             dispatcherTimer.Stop();
-            //hideProgressBar();
             timer = false;
+            TimeSpan ts = stopwatch.Elapsed;
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+            ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+            LogWriter log = new LogWriter(manager);
+            log.Write(mDBPath, elapsedTime);
         }
 
+        /// <summary>
+        /// Fired every second updates UI
+        /// </summary>
+        /// <param name="sender">Dispatach Timer</param>
+        /// <param name="args"></param>
         public void DispatcherTimer_Tick(object sender, EventArgs args)
         {
             int geotagCount = manager.updateGeoTagCount;
@@ -156,23 +175,13 @@ namespace Geotagger_V2
             SpeedLabel.Content = "Items/sec: " + count;
             startCount = geotagCount;
             refreshUI();
-            //ProgressLabel.Content = manager.updateProgessMessage;
-            //ProgressBar1.Value = manager.updateProgessValue;
-            //PhotoCountLabel.Content = "Photos Found: " + manager.updatePhotoCount;
-            //RecordCountLabel.Content = "Records to process: " + manager.updateRecordCount;
-            //GeotagLabel.Content = "Geotag Count: " + manager.updateGeoTagCount;
-            //RecordDictLabel.Content = "Record Dictionary: " + manager.updateRecordDictCount;
-            //PhotoQueueLabel.Content = "Photo Queue: " + manager.updatePhotoQueueCount;
-            //BitmapQueueLabel.Content = "Bitmap Queue: " + manager.updateBitmapQueueCount;
-            //NoRecordLabel.Content = "Photos with no record: " + manager.updateNoRecordCount;
-            //DuplicateLabel.Content = "Duplicate Records: " + manager.updateDuplicateCount;
         }
 
         private void refreshUI()
         {
             ProgressLabel.Content = manager.updateProgessMessage;
             ProgressBar1.Value = manager.updateProgessValue;
-            PhotoCountLabel.Content = "Photos Found: " + manager.updatePhotoCount;
+            PhotoCountLabel.Content = "Processing photo: "  + (manager.updatePhotoCount - manager.updatePhotoQueueCount) + " of " + manager.updatePhotoCount;
             RecordCountLabel.Content = "Records to process: " + manager.updateRecordCount;
             GeotagLabel.Content = "Geotag Count: " + manager.updateGeoTagCount;
             RecordDictLabel.Content = "Record Dictionary: " + manager.updateRecordDictCount;
@@ -238,5 +247,7 @@ namespace Geotagger_V2
 
             }));
         }
+
+        
     }
 }
