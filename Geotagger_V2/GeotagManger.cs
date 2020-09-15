@@ -13,19 +13,21 @@ namespace Geotagger_V2
     public abstract class GeotagManger
     {
 
-        private string _progressMessage;
-        private double _progressValue;
-        private int _photoCount;
-        private int _progressPhotoQueueCount;
+        protected string _progressMessage;
+        protected double _progressValue;
+        protected int _photoCount;
+        protected int _progressPhotoQueueCount;
+        protected Boolean mZip;
+        protected BlockingCollection<string> photoQueue;
 
         /// <summary>
         /// Adds all image files(.jpg) found in directory to a concurrent dictionary- key: filename, value: filepath
         /// </summary>
         /// <param name="path">parent folder path</param>
         /// <param name="zip">searches and reads zip directory for .jpg files</param>
-        public void photoReader(string path, Boolean zip)
+        public virtual void photoReader(string path, bool zip)
         {
-            BlockingCollection<string> photoQueue = new BlockingCollection<string>(); ;
+            photoQueue = new BlockingCollection<string>(); ;
             string initialMessage = "Searching directories...";
             Interlocked.Exchange(ref _progressMessage, initialMessage);
             Task search = Task.Factory.StartNew(() =>
