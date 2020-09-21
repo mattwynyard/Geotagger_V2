@@ -71,10 +71,20 @@ namespace Geotagger_V2
                     }
                 } else //read
                 {
-                    if (browseFolderDialog.SelectedPath != "")
+                    if (b.Name == "BrowseInputRead")
                     {
-                        txtBoxPhotoRead.Text = mInputPath = browseFolderDialog.SelectedPath;
+                        if (browseFolderDialog.SelectedPath != "")
+                        {
+                            txtInputPathRead.Text = mInputPath = browseFolderDialog.SelectedPath;
+                        }
+                    } else
+                    {
+                        if (browseFolderDialog.SelectedPath != "")
+                        {
+                            txtOutputPathRead.Text = mOutputPath = browseFolderDialog.SelectedPath;
+                        }
                     }
+                    
                 }
                    
             }
@@ -139,17 +149,32 @@ namespace Geotagger_V2
                         }
                     } else
                     {
+                        MessageBoxResult msgResult = System.Windows.MessageBox.Show("Duplicates detected in the record database",
+                                          "Operation will be cancelled",
+                                          MessageBoxButton.OK,
+                                          MessageBoxImage.Error);
                         source.Cancel();
                     }
                     if (token.IsCancellationRequested)
-                    token.ThrowIfCancellationRequested();
+                    {
+                         token.ThrowIfCancellationRequested();
+                    }
+                    
                 }
                 else
                 {
                     Console.WriteLine(result);
                 }
             }, token);
-            await Task.WhenAll(worker);
+            try
+            {
+                await Task.WhenAll(worker);
+            } catch (OperationCanceledException ex)
+            {
+                manager.updateProgessMessage = "Cancelled";
+                timer = false;
+                refreshUI();
+            }
             BrowseDB.IsEnabled = true;
             BrowseInput.IsEnabled = true;
             BrowseOutput.IsEnabled = true;

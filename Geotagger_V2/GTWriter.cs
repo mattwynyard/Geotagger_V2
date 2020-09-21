@@ -487,6 +487,10 @@ namespace Geotagger_V2
             {
                 return Interlocked.CompareExchange(ref _progressMessage, "", "");
             }
+            set
+            {
+                Interlocked.Exchange(ref _progressMessage, value);
+            }
         }
 
         public int updatePhotoCount

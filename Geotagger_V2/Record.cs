@@ -21,7 +21,6 @@ namespace Geotagger_V2
         public bool geotag;
         public string path;
 
-
         public Record()
         {
         }
@@ -104,8 +103,6 @@ namespace Geotagger_V2
             }
         }
 
-
-
         public double Bearing
         {
             get
@@ -154,7 +151,7 @@ namespace Geotagger_V2
             }
         }
 
-        public String Inspector
+        public string Inspector
         {
             get
             {
@@ -177,7 +174,7 @@ namespace Geotagger_V2
                 timestamp = value;
             }
         }
-        public Boolean GeoMark
+        public bool GeoMark
         {
             get
             {
@@ -189,7 +186,7 @@ namespace Geotagger_V2
             }
         }
 
-        public Boolean GeoTag { get; set; }
+        public bool GeoTag { get; set; }
 
         public string Path { get; set; }
 
@@ -219,7 +216,6 @@ namespace Geotagger_V2
             s.Append(Satellites + ",");
             s.Append(PDop + ",");
             s.Append(Inspector + ",");
-            //s.Append(sa + ",");
             s.Append(TimeStamp);
 
 
@@ -238,8 +234,6 @@ namespace Geotagger_V2
             s.Append(Altitude + ",");
             s.Append(Inspector + ",");
             s.Append(TimeStamp);
-
-
             return s.ToString();
         }
     }
