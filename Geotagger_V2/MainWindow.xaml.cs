@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -19,15 +22,20 @@ namespace Geotagger_V2
         private string mInputReadPath;
         private DispatcherTimer dispatcherTimer;
         private GTWriter manager;
+        private GTReader reader;
         private Stopwatch stopwatch;
-        private Boolean timer = false;
+        private bool timer = false;
         private int startCount = 0;
+        private bool writeMode; //write or read mode
+
         public MainWindow()
         {
             InitializeComponent();
             ProgressBar1.Visibility = Visibility.Hidden;
             ProgressText.Visibility = Visibility.Hidden;
-
+            ProgressBar2.Visibility = Visibility.Hidden;
+            ProgressText2.Visibility = Visibility.Hidden;
+            writeMode = true;
         }
 
         private void BrowseDB_Button_Click(object sender, RoutedEventArgs e)
@@ -83,42 +91,65 @@ namespace Geotagger_V2
                         {
                             txtOutputPathRead.Text = mOutputPath = browseFolderDialog.SelectedPath;
                         }
-                    }
-                    
-                }
-                   
+                    }                 
+                }             
             }
         }
 
-        private void GeotagRead_Click(object sender, RoutedEventArgs e)
+        private async void GeotagRead_Click(object sender, RoutedEventArgs e)
         {
-            Console.WriteLine("click");
-            if (manager == null)
+            reader = GTReader.Instance();
+            startTimers(reader);
+            BrowseInputRead.IsEnabled = false;
+            BrowseOutputRead.IsEnabled = false;
+            GeotagRead.IsEnabled = false;
+
+            var source = new CancellationTokenSource();
+            CancellationToken token = source.Token;
+            Task worker = Task.Factory.StartNew(() =>
             {
-                manager = GTWriter.Instance(50);
-            }
+                showProgressBar();
+                progressIndeterminate(true);
+                reader.photoReader(mInputPath, false);
+                progressIndeterminate(false);
+                TaskStatus result = reader.readGeotag().Result;
+                if (result == TaskStatus.RanToCompletion)
+                {
+                    
+                }
+
+            });
+            await Task.WhenAll(worker);
+            ConcurrentQueue<Record> queue = reader.Queue;
+            List<Record> list = queue.ToList();
+            Writer writer = new Writer(list);
+            writer.WriteCSV(mOutputPath);
+        }
+
+
+        private void startTimers(object caller)
+        {
+            dispatcherTimer = new DispatcherTimer();
+            dispatcherTimer.Tick += new EventHandler(DispatcherTimer_Tick);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
+            dispatcherTimer.Start();
+            Timer();
         }
 
         /// <summary>
-        /// Fired when user clicks geotag button. Starts geotagger
+        /// Fired when user clicks geotag button. Starts geotagger writer
         /// </summary>
         /// <param name="sender">object - the geotag button</param>
         /// <param name="e">click event</param>
         private async void Geotag_Click(object sender, RoutedEventArgs e)
         {
-
             manager = GTWriter.Instance(50);
-            dispatcherTimer = new DispatcherTimer();
-            stopwatch = new Stopwatch();
-            stopwatch.Start();
-            dispatcherTimer.Tick += new EventHandler(DispatcherTimer_Tick);
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
-            dispatcherTimer.Start();
-            Timer();
+            startTimers(manager);
             BrowseDB.IsEnabled = false;
             BrowseInput.IsEnabled = false;
             BrowseOutput.IsEnabled = false;
             Geotag.IsEnabled = false;
+            TabItemRead.IsEnabled = false;
             var source = new CancellationTokenSource();
             CancellationToken token = source.Token;
             Task worker = Task.Factory.StartNew(() =>
@@ -128,8 +159,7 @@ namespace Geotagger_V2
                 manager.photoReader(mInputPath, false);
                 progressIndeterminate(false);
                 TaskStatus result = manager.readDatabase(mDBPath, "").Result;
-                Console.WriteLine(result);
-                
+                Console.WriteLine(result);            
                 if (result == TaskStatus.RanToCompletion)
                 {
                     if (manager.updateDuplicateCount == 0)
@@ -140,7 +170,6 @@ namespace Geotagger_V2
                             Dispatcher.Invoke((Action)(() =>
                             {
                                 refreshUI();
-
                             }));
                         }
                         else
@@ -154,12 +183,13 @@ namespace Geotagger_V2
                                           MessageBoxButton.OK,
                                           MessageBoxImage.Error);
                         source.Cancel();
+                        
                     }
                     if (token.IsCancellationRequested)
                     {
-                         token.ThrowIfCancellationRequested();
-                    }
-                    
+                        timer = false;
+                        token.ThrowIfCancellationRequested();
+                    }                
                 }
                 else
                 {
@@ -172,13 +202,13 @@ namespace Geotagger_V2
             } catch (OperationCanceledException ex)
             {
                 manager.updateProgessMessage = "Cancelled";
-                timer = false;
                 refreshUI();
             }
             BrowseDB.IsEnabled = true;
             BrowseInput.IsEnabled = true;
             BrowseOutput.IsEnabled = true;
             Geotag.IsEnabled = true;
+            TabItemRead.IsEnabled = true;
             dispatcherTimer.Stop();
             timer = false;
             TimeSpan ts = stopwatch.Elapsed;
@@ -195,46 +225,77 @@ namespace Geotagger_V2
         /// <param name="args"></param>
         public void DispatcherTimer_Tick(object sender, EventArgs args)
         {
-            int geotagCount = manager.updateGeoTagCount;
-            int count = geotagCount - startCount;
-            SpeedLabel.Content = "Items/sec: " + count;
-            startCount = geotagCount;
-            refreshUI();
+            if (writeMode)
+            {
+                int geotagCount = manager.updateGeoTagCount;
+                int count = geotagCount - startCount;
+                SpeedLabel.Content = "Items/sec: " + count;
+                startCount = geotagCount;
+                refreshUI();
+            } else
+            {
+                Console.WriteLine("reader");
+                refreshUI();
+            }
         }
 
         private void refreshUI()
         {
-            ProgressLabel.Content = manager.updateProgessMessage;
-            ProgressBar1.Value = manager.updateProgessValue;
-            PhotoCountLabel.Content = "Processing photo: "  + (manager.updatePhotoCount - manager.updatePhotoQueueCount) + " of " + manager.updatePhotoCount;
-            RecordCountLabel.Content = "Records to process: " + manager.updateRecordCount;
-            GeotagLabel.Content = "Geotag Count: " + manager.updateGeoTagCount;
-            RecordDictLabel.Content = "Record Dictionary: " + manager.updateRecordDictCount;
-            PhotoQueueLabel.Content = "Photo Queue: " + manager.updatePhotoQueueCount;
-            BitmapQueueLabel.Content = "Bitmap Queue: " + manager.updateBitmapQueueCount;
-            NoRecordLabel.Content = "Photos with no record: " + manager.updateNoRecordCount;
-            DuplicateLabel.Content = "Duplicate Records: " + manager.updateDuplicateCount;
-            PhotoErrorLabel.Content = "Photo Name Errors: " + manager.updatePhotoNameError;
+            if (writeMode)
+            {
+                ProgressLabel.Content = manager.updateProgessMessage;
+                ProgressBar1.Value = manager.updateProgessValue;
+                PhotoCountLabel.Content = "Processing photo: " + (manager.updatePhotoCount - manager.updatePhotoQueueCount) + " of " + manager.updatePhotoCount;
+                RecordCountLabel.Content = "Records to process: " + manager.updateRecordCount;
+                GeotagLabel.Content = "Geotag Count: " + manager.updateGeoTagCount;
+                RecordDictLabel.Content = "Record Dictionary: " + manager.updateRecordDictCount;
+                PhotoQueueLabel.Content = "Photo Queue: " + manager.updatePhotoQueueCount;
+                BitmapQueueLabel.Content = "Bitmap Queue: " + manager.updateBitmapQueueCount;
+                NoRecordLabel.Content = "Photos with no record: " + manager.updateNoRecordCount;
+                DuplicateLabel.Content = "Duplicate Records: " + manager.updateDuplicateCount;
+                PhotoErrorLabel.Content = "Photo Name Errors: " + manager.updatePhotoNameError;
+            } else
+            {
+                ProgressLabel2.Content = reader.updateProgessMessage;
+                ProgressBar2.Value = reader.updateProgessValue;
+                PhotoCountLabelReader.Content = "Processing photo: " + (reader.updateRecordQueueCount) + " of " + reader.updatePhotoCount;
+            }
         }
 
+        /// <summary>
+        /// Starts program timer on its own thread and display output on main form
+        /// </summary>
         private void Timer()
         {
             timer = true;
             stopwatch = new Stopwatch();
             stopwatch.Start();
-            
+            System.Windows.Controls.Label timeLabel;
+            if (writeMode)
+            {
+                timeLabel = TimeLabel;
+            } else
+            {
+                timeLabel = TimeLabelReader;
+            }
             Task sw = Task.Factory.StartNew(() =>
             {
-                
-                while (timer)
+                if (writeMode)
                 {
+                    timeLabel = TimeLabel;
+                }
+                else
+                {
+                    timeLabel = TimeLabelReader;
+                }
+                while (timer)
+                {  
                     TimeSpan ts = stopwatch.Elapsed;
                     string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
                     ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
                     Dispatcher.Invoke((Action)(() =>
                     {
-                        TimeLabel.Content = elapsedTime;
-
+                        timeLabel.Content = elapsedTime;
                     }));
                     Thread.Sleep(10);
                 }
@@ -244,35 +305,82 @@ namespace Geotagger_V2
         private void hideProgressBar()
         {
             Dispatcher.Invoke((Action)(() => {
-                ProgressBar1.Visibility = Visibility.Hidden;
-                ProgressText.Visibility = Visibility.Hidden;
-                ProgressLabel.Visibility = Visibility.Hidden;
-            }));
-        }
-        private void showProgressBar()
-        {
-            Dispatcher.Invoke((Action)(() => {
-                ProgressBar1.Visibility = Visibility.Visible;
-                ProgressText.Visibility = Visibility.Visible;
-                ProgressLabel.Visibility = Visibility.Visible;
+                if (writeMode)
+                {
+                    ProgressBar1.Visibility = Visibility.Hidden;
+                    ProgressText.Visibility = Visibility.Hidden;
+                    ProgressLabel.Visibility = Visibility.Hidden;
+                } else
+                {
+                    ProgressBar2.Visibility = Visibility.Hidden;
+                    ProgressText2.Visibility = Visibility.Hidden;
+                    ProgressLabel2.Visibility = Visibility.Hidden;
+                }
             }));
         }
 
-        private void progressIndeterminate(Boolean isIndeterminate)
+
+        private void showProgressBar()
+        {
+            Dispatcher.Invoke((Action)(() => {
+                if (writeMode)
+                {
+                    ProgressBar1.Visibility = Visibility.Visible;
+                    ProgressText.Visibility = Visibility.Visible;
+                    ProgressLabel.Visibility = Visibility.Visible;
+                } else
+                {
+                {
+                    ProgressBar2.Visibility = Visibility.Visible;
+                    ProgressText2.Visibility = Visibility.Visible;
+                    ProgressLabel2.Visibility = Visibility.Visible;
+                }
+                }
+            }));
+        }
+
+        /// <summary>
+        /// Sets or unsets whether progress bar is undertimanate
+        /// </summary>
+        /// <param name="isIndeterminate"></param>
+        private void progressIndeterminate(bool isIndeterminate)
         {
             Dispatcher.Invoke((Action)(() => {
                 if (isIndeterminate)
                 {
-                    ProgressBar1.IsIndeterminate = true;
+                    if (writeMode)
+                    {
+                        ProgressBar1.IsIndeterminate = true;
+                    } else
+                    {
+                        ProgressBar2.IsIndeterminate = true;
+                    }
                 }
                 else
                 {
-                    ProgressBar1.IsIndeterminate = false;
+                    if (writeMode)
+                    {
+                        ProgressBar1.IsIndeterminate = false;
+                    } else
+                    {
+                        ProgressBar2.IsIndeterminate = false;
+                    }
                 }
 
             }));
         }
 
-        
+        private void changeMode(object sender, RoutedEventArgs e)
+        {
+            if (writeMode)
+            {
+                writeMode = false;
+            }
+            else
+            {
+                writeMode = true;
+            }
+            Console.WriteLine(writeMode);
+        }
     }
 }

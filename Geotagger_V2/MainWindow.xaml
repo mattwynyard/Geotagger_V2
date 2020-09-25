@@ -8,29 +8,43 @@
         Title="Geotagger" Height="600" Width="1000">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="263*"/>
-            <ColumnDefinition Width="467*"/>
-            <ColumnDefinition Width="62*"/>
+            <ColumnDefinition Width="329*"/>
+            <ColumnDefinition Width="520*"/>
+            <ColumnDefinition Width="65*"/>
+            <ColumnDefinition Width="78*"/>
         </Grid.ColumnDefinitions>
-        <TabControl  x:Name="MyTabControl" HorizontalAlignment="Left" Height="531" Margin="10,28,0,0" VerticalAlignment="Top" Width="972" Grid.ColumnSpan="3">
-            <TabItem Name="TabItemWrite" Header="Write">
+        <TabControl  x:Name="MyTabControl" HorizontalAlignment="Left" Height="531" Margin="10,28,0,0" VerticalAlignment="Top" Width="972" Grid.ColumnSpan="4">
+            <TabItem Name="TabItemWrite">
+                <TabItem.Header>
+                    <Label Content="Write" 
+                MouseLeftButtonDown="changeMode" 
+                HorizontalAlignment="Stretch"/>
+                </TabItem.Header>
                 <Grid Background="#FFE5E5E5" Margin="0,-17">
-                    <TextBox x:Name="txtBoxDB" HorizontalAlignment="Left" Height="20" Margin="105,48,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476"/>
-                    <TextBox x:Name="txtBoxOutput" HorizontalAlignment="Left" Height="20" Margin="105,131,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476"/>
-                    <TextBox x:Name="txtBoxInput" HorizontalAlignment="Left" Height="20" Margin="105,85,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476"/>
-                    <Button x:Name="BrowseDB" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="586,48,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click"/>
-                    <Label Content="Database Path" HorizontalAlignment="Left" Height="27" Margin="16,45,0,0" VerticalAlignment="Top" Width="89" RenderTransformOrigin="0.58,1.863"/>
-                    <Label Content="Input Path" HorizontalAlignment="Left" Height="27" Margin="16,82,0,0" VerticalAlignment="Top" Width="69" RenderTransformOrigin="0.58,1.863"/>
-                    <Label Content="Output Path" HorizontalAlignment="Left" Height="27" Margin="16,128,0,0" VerticalAlignment="Top" Width="84" RenderTransformOrigin="0.58,1.863"/>
-                    <Button x:Name="BrowseInput" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="586,85,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click"/>
-                    <Button x:Name="BrowseOutput" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="586,131,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click"/>
-                    <Button x:Name="Geotag" Content="Geotag" HorizontalAlignment="Left" Margin="586,180,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Geotag_Click"/>
-                    <ProgressBar Name="ProgressBar1" HorizontalAlignment="Left" Height="31" Margin="105,186,0,0" VerticalAlignment="Top" Width="476"/>
-                    <TextBlock  Name="ProgressText" Text="{Binding ElementName=ProgressBar1, Path=Value, StringFormat={}{0:0}%}" Margin="339,0,595,328" Height="17" Width="32" RenderTransformOrigin="-0.2,0.359" VerticalAlignment="Bottom" />
-                    <Label Name="ProgressLabel" HorizontalAlignment="Left" Margin="105,161,0,0" VerticalAlignment="Top" Width="225" Height="25"/>
-                    <Label Content="Time Elapsed:" HorizontalAlignment="Left" Margin="105,222,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.682,-0.804" Width="85"/>
-                    <Label Name="TimeLabel" Content="00:00:00.00" HorizontalAlignment="Left" Margin="190,222,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.179,-0.547" Width="81"/>
-                    <Expander Header="Details" HorizontalAlignment="Left" Height="203" Margin="105,282,0,0" VerticalAlignment="Top" Width="558" IsExpanded="True">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="16*"/>
+                        <ColumnDefinition Width="37*"/>
+                        <ColumnDefinition Width="15*"/>
+                        <ColumnDefinition Width="6*"/>
+                        <ColumnDefinition Width="11*"/>
+                        <ColumnDefinition Width="881*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="txtBoxDB" HorizontalAlignment="Left" Height="20" Margin="20,48,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476" Grid.Column="5"/>
+                    <TextBox x:Name="txtBoxOutput" HorizontalAlignment="Left" Height="20" Margin="20,131,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476" Grid.Column="5"/>
+                    <TextBox x:Name="txtBoxInput" HorizontalAlignment="Left" Height="20" Margin="20,85,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476" Grid.Column="5"/>
+                    <Button x:Name="BrowseDB" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="501,48,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="5"/>
+                    <Label Content="Database Path" HorizontalAlignment="Left" Height="27" Margin="0,45,0,0" VerticalAlignment="Top" Width="89" RenderTransformOrigin="0.58,1.863" Grid.ColumnSpan="5" Grid.Column="1"/>
+                    <Label Content="Input Path" HorizontalAlignment="Left" Height="27" Margin="0,82,0,0" VerticalAlignment="Top" Width="69" RenderTransformOrigin="0.58,1.863" Grid.ColumnSpan="4" Grid.Column="1"/>
+                    <Label Content="Output Path" HorizontalAlignment="Left" Height="27" Margin="0,128,0,0" VerticalAlignment="Top" Width="84" RenderTransformOrigin="0.58,1.863" Grid.ColumnSpan="5" Grid.Column="1"/>
+                    <Button x:Name="BrowseInput" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="501,85,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="5"/>
+                    <Button x:Name="BrowseOutput" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="501,131,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="5"/>
+                    <Button x:Name="Geotag" Content="Geotag" HorizontalAlignment="Left" Margin="501,180,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Geotag_Click" Grid.Column="5"/>
+                    <ProgressBar Name="ProgressBar1" HorizontalAlignment="Left" Height="31" Margin="20,186,0,0" VerticalAlignment="Top" Width="476" Grid.Column="5"/>
+                    <TextBlock  Name="ProgressText" Text="{Binding ElementName=ProgressBar1, Path=Value, StringFormat={}{0:0}%}" Margin="254,0,595,320" Height="17" Width="32" RenderTransformOrigin="-0.2,0.359" VerticalAlignment="Bottom" Grid.Column="5" />
+                    <Label Name="ProgressLabel" HorizontalAlignment="Left" Margin="20,161,0,0" VerticalAlignment="Top" Width="225" Height="25" Grid.Column="5"/>
+                    <Label Content="Time Elapsed:" HorizontalAlignment="Left" Margin="20,222,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.682,-0.804" Width="85" Grid.Column="5"/>
+                    <Label Name="TimeLabel" Content="00:00:00.00" HorizontalAlignment="Left" Margin="105,222,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.179,-0.547" Width="81" Grid.Column="5"/>
+                    <Expander Header="Details" HorizontalAlignment="Left" Height="203" Margin="20,282,0,0" VerticalAlignment="Top" Width="558" IsExpanded="True" Grid.Column="5">
                         <Grid Background="#FFE5E5E5">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="9*"/>
@@ -48,25 +62,37 @@
                             <Label x:Name="PhotoErrorLabel" Content="Photo Name Errors: 0" Grid.Column="2" HorizontalAlignment="Left" Margin="10,62,0,0" VerticalAlignment="Top" Width="260" Height="26"/>
                         </Grid>
                     </Expander>
-                    <Label x:Name="SpeedLabel" Content="Items/sec: 0" HorizontalAlignment="Left" Margin="339,246,0,0" VerticalAlignment="Top" Width="192"/>
+                    <Label x:Name="SpeedLabel" Content="Items/sec: 0" HorizontalAlignment="Left" Margin="254,246,0,0" VerticalAlignment="Top" Width="192" Grid.Column="5"/>
 
                 </Grid>
             </TabItem>
-            <TabItem x:Name="TabItemRead" Header="Read">
+            <TabItem x:Name="TabItemRead">
+                <TabItem.Header>
+                    <Label Content="Read" 
+                MouseLeftButtonDown="changeMode" 
+                HorizontalAlignment="Stretch"/>
+                </TabItem.Header>
                 <Grid Background="#FFE5E5E5">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="5*"/>
-                        <ColumnDefinition Width="3*"/>
-                        <ColumnDefinition Width="5*"/>
-                        <ColumnDefinition Width="470*"/>
+                        <ColumnDefinition Width="10*"/>
+                        <ColumnDefinition Width="6*"/>
+                        <ColumnDefinition Width="10*"/>
+                        <ColumnDefinition Width="45*"/>
+                        <ColumnDefinition Width="895*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="txtInputPathRead" HorizontalAlignment="Left" Height="20" Margin="79,85,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476" Grid.Column="3"/>
-                    <Label Content="Input Path" HorizontalAlignment="Left" Height="27" Margin="15,82,0,0" VerticalAlignment="Top" Width="64" RenderTransformOrigin="0.58,1.863" Grid.Column="3"/>
-                    <Button x:Name="BrowseInputRead" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="560,85,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="3"/>
-                    <Button x:Name="GeotagRead" Content="Read" HorizontalAlignment="Left" Margin="560,163,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="GeotagRead_Click" Grid.Column="3"/>
-                    <TextBox x:Name="txtOutputPathRead" HorizontalAlignment="Left" Height="20" Margin="79,126,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476" Grid.Column="3"/>
-                    <Button x:Name="BrowseOutputRead" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="560,126,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="3"/>
-                    <Label Content="Output Path" HorizontalAlignment="Left" Height="27" Margin="5,123,0,0" VerticalAlignment="Top" Width="74" RenderTransformOrigin="0.58,1.863" Grid.Column="3"/>
+                    <TextBox x:Name="txtInputPathRead" HorizontalAlignment="Left" Height="20" Margin="34,85,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476" Grid.Column="4"/>
+                    <Label Content="Input Path" HorizontalAlignment="Left" Height="27" Margin="15,82,0,0" VerticalAlignment="Top" Width="64" RenderTransformOrigin="0.58,1.863" Grid.Column="3" Grid.ColumnSpan="2"/>
+                    <Button x:Name="BrowseInputRead" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="515,85,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="4"/>
+                    <Button x:Name="GeotagRead" Content="Read" HorizontalAlignment="Left" Margin="515,190,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="GeotagRead_Click" Grid.Column="4"/>
+                    <TextBox x:Name="txtOutputPathRead" HorizontalAlignment="Left" Height="20" Margin="34,126,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476" Grid.Column="4"/>
+                    <Button x:Name="BrowseOutputRead" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="515,126,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="4"/>
+                    <Label Content="Output Path" HorizontalAlignment="Left" Height="27" Margin="5,123,0,0" VerticalAlignment="Top" Width="74" RenderTransformOrigin="0.58,1.863" Grid.Column="3" Grid.ColumnSpan="2"/>
+                    <ProgressBar x:Name="ProgressBar2" HorizontalAlignment="Left" Height="31" Margin="34,190,0,0" VerticalAlignment="Top" Width="476" Grid.Column="4"/>
+                    <TextBlock  x:Name="ProgressText2" Text="{Binding Value, ElementName=ProgressBar2, StringFormat=\{0:0\}%}" Margin="273,0,590,276" Height="17" Width="32" RenderTransformOrigin="-0.2,0.359" VerticalAlignment="Bottom" Grid.Column="4" />
+                    <Label x:Name="ProgressLabel2" HorizontalAlignment="Left" Margin="34,161,0,0" VerticalAlignment="Top" Width="225" Height="25" Grid.Column="4"/>
+                    <Label Content="Time Elapsed:" HorizontalAlignment="Left" Margin="34,222,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.682,-0.804" Width="85" Grid.Column="4"/>
+                    <Label x:Name="TimeLabelReader" Content="00:00:00.00" HorizontalAlignment="Left" Margin="119,222,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.179,-0.547" Width="81" Grid.Column="4"/>
+                    <Label x:Name="PhotoCountLabelReader" Content="Processing Photo: 0 of 0" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.791,-0.491" Width="225" Margin="34,253,0,0" Grid.Column="4"/>
                 </Grid>
             </TabItem>
         </TabControl>

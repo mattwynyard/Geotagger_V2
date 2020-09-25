@@ -5,8 +5,8 @@ namespace Geotagger_V2
 {
     public class Record
     {
-        public string id;
-        public string photo;
+        private string id;
+        private string photo;
         public string photoRename;
         public double latitude;
         public double longitude;
@@ -219,6 +219,24 @@ namespace Geotagger_V2
             s.Append(TimeStamp);
 
 
+            return s.ToString();
+        }
+
+        public static string getHeader()
+        {
+            StringBuilder s = new StringBuilder();
+            s.Append("ID,");
+            s.Append("PhotoName,");
+            s.Append("PhotoRename,");
+            s.Append("Latitude,");
+            s.Append("Longitude,");
+            s.Append("Altitude,");
+            s.Append("Bearing,");
+            s.Append("Velocity,");
+            s.Append("Satellites,");
+            s.Append("PDop,");
+            s.Append("Inspector,");
+            s.Append("TimeStamp");
             return s.ToString();
         }
 

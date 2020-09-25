@@ -21,21 +21,15 @@ namespace Geotagger_V2
 {
     public class GTWriter : GeotagManger
     {
-        //private string _progressMessage;
-        //private double _progressValue;
         private int _progressRecordCount;
         private int _progressRecordDictCount;
-        //private int _progressPhotoQueueCount;
         private int _progressBitmapQueueCount;
         private int _progressRecordDictErrors;
-        //private int _photoCount;
         private int _photosNoRecordCount;
         private int _geotagCount;
         private int _photoNameError;
-        
         private BlockingCollection<object[]> bitmapQueue;
         private static ManualResetEvent mre = new ManualResetEvent(false);
-
         private static GTWriter _instance;
 
         protected GTWriter(int sizeBitmapQueue) 
@@ -479,28 +473,6 @@ namespace Geotagger_V2
             return originalPath;
         }
 
-
-
-        public string updateProgessMessage
-        {
-            get
-            {
-                return Interlocked.CompareExchange(ref _progressMessage, "", "");
-            }
-            set
-            {
-                Interlocked.Exchange(ref _progressMessage, value);
-            }
-        }
-
-        public int updatePhotoCount
-        {
-            get
-            {
-                return Interlocked.CompareExchange(ref _photoCount, 0, 0);
-            }
-        }
-
         public int updateGeoTagCount
         {
             get
@@ -530,22 +502,6 @@ namespace Geotagger_V2
             get
             {
                 return Interlocked.CompareExchange(ref _progressBitmapQueueCount, 0, 0);
-            }
-        }
-
-        public int updatePhotoQueueCount
-        {
-            get
-            {
-                return Interlocked.CompareExchange(ref _progressPhotoQueueCount, 0, 0);
-            }
-        }
-
-        public double updateProgessValue
-        {
-            get
-            {
-                return Interlocked.CompareExchange(ref _progressValue, 0, 0);
             }
         }
 

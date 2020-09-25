@@ -93,6 +93,7 @@
     <Compile Include="RecordUtil.cs" />
     <Compile Include="ThreadInfo.cs" />
     <Compile Include="Utilities.cs" />
+    <Compile Include="Writer.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

@@ -17,7 +17,7 @@ namespace Geotagger_V2
         protected double _progressValue;
         protected int _photoCount;
         protected int _progressPhotoQueueCount;
-        protected Boolean mZip;
+        protected bool mZip;
         protected BlockingCollection<string> photoQueue;
 
         /// <summary>
@@ -89,6 +89,42 @@ namespace Geotagger_V2
             });
             Task.WaitAll(search);
             Interlocked.Exchange(ref _progressMessage, "Finished");
+        }
+
+        public double updateProgessValue
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref _progressValue, 0, 0);
+            }
+        }
+
+        public string updateProgessMessage
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref _progressMessage, "", "");
+            }
+            set
+            {
+                Interlocked.Exchange(ref _progressMessage, value);
+            }
+        }
+
+        public int updatePhotoCount
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref _photoCount, 0, 0);
+            }
+        }
+
+        public int updatePhotoQueueCount
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref _progressPhotoQueueCount, 0, 0);
+            }
         }
     }
 }
