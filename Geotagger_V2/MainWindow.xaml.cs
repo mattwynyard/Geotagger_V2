@@ -59,10 +59,10 @@ namespace Geotagger_V2
                 }
             } else 
             {
-                FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog();
-                browseFolderDialog.ShowDialog();
                 if (TabItemWrite.IsSelected) //write
                 {
+                    FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog();
+                    browseFolderDialog.ShowDialog();
                     if (b.Name == "BrowseInput")
                     {
                         if (browseFolderDialog.SelectedPath != "")
@@ -81,18 +81,45 @@ namespace Geotagger_V2
                 {
                     if (b.Name == "BrowseInputRead")
                     {
+                        FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog();
+                        browseFolderDialog.ShowDialog();
                         if (browseFolderDialog.SelectedPath != "")
                         {
                             txtInputPathRead.Text = mInputPath = browseFolderDialog.SelectedPath;
                         }
                     } else
                     {
-                        if (browseFolderDialog.SelectedPath != "")
+                        SaveFileDialog saveFileDialog1 = new SaveFileDialog();
+                        saveFileDialog1.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
+                        saveFileDialog1.ShowDialog();
+                        if (saveFileDialog1.FileName != "")
                         {
-                            txtOutputPathRead.Text = mOutputPath = browseFolderDialog.SelectedPath;
+                            txtOutputPathRead.Text = mOutputPath = saveFileDialog1.FileName;
                         }
                     }                 
                 }             
+            }
+        }
+
+        private bool isFileValid(string path)
+        {
+            System.IO.FileInfo fi = null;
+            try
+            {
+                fi = new System.IO.FileInfo(path);
+            }
+            catch (ArgumentException) { }
+            catch (System.IO.PathTooLongException) { }
+            catch (NotSupportedException) { }
+            if (ReferenceEquals(fi, null))
+            {
+                // file name is not valid
+                return false;
+            }
+            else
+            {
+                return true;
+                // file name is valid... May check for existence by calling fi.Exists.
             }
         }
 
@@ -103,27 +130,39 @@ namespace Geotagger_V2
             BrowseInputRead.IsEnabled = false;
             BrowseOutputRead.IsEnabled = false;
             GeotagRead.IsEnabled = false;
+            bool format = isFileValid(mOutputPath);
 
-            var source = new CancellationTokenSource();
-            CancellationToken token = source.Token;
-            Task worker = Task.Factory.StartNew(() =>
+            if (format)
             {
-                showProgressBar();
-                progressIndeterminate(true);
-                reader.photoReader(mInputPath, false);
-                progressIndeterminate(false);
-                TaskStatus result = reader.readGeotag().Result;
-                if (result == TaskStatus.RanToCompletion)
+                var source = new CancellationTokenSource();
+                CancellationToken token = source.Token;
+                Task worker = Task.Factory.StartNew(() =>
                 {
-                    
-                }
+                    showProgressBar();
+                    progressIndeterminate(true);
+                    reader.photoReader(mInputPath, false);
+                    progressIndeterminate(false);
+                    TaskStatus result = reader.readGeotag().Result;
+                    if (result == TaskStatus.RanToCompletion)
+                    {
 
-            });
-            await Task.WhenAll(worker);
-            ConcurrentQueue<Record> queue = reader.Queue;
-            List<Record> list = queue.ToList();
-            Writer writer = new Writer(list);
-            writer.WriteCSV(mOutputPath);
+                    }
+
+                });
+                await Task.WhenAll(worker);
+                ConcurrentQueue<Record> queue = reader.Queue;
+                List<Record> list = queue.ToList();
+                Writer writer = new Writer(list);
+                writer.WriteCSV(mOutputPath);
+            } else
+            {
+                string message = "The output file path is not valid";
+                string caption = "Error in output path";
+                MessageBoxButtons buttons = MessageBoxButtons.OK;
+                // Displays the MessageBox.
+                System.Windows.Forms.MessageBox.Show(message, caption, buttons);
+            }
+            
         }
 
 
@@ -381,6 +420,12 @@ namespace Geotagger_V2
                 writeMode = true;
             }
             Console.WriteLine(writeMode);
+        }
+
+        private void txtOutputPathRead_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            Console.WriteLine(txtOutputPathRead.Text);
+            mOutputPath = txtOutputPathRead.Text;
         }
     }
 }

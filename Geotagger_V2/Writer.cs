@@ -49,7 +49,6 @@ namespace Geotagger_V2
 
             if (Data != null)
             {
-                path += "\\data.csv";
                 using (var w = new StreamWriter(path))
                 {
                     string header = Record.getHeader();
