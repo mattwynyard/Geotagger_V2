@@ -101,28 +101,6 @@ namespace Geotagger_V2
             }
         }
 
-        private bool isFileValid(string path)
-        {
-            System.IO.FileInfo fi = null;
-            try
-            {
-                fi = new System.IO.FileInfo(path);
-            }
-            catch (ArgumentException) { }
-            catch (System.IO.PathTooLongException) { }
-            catch (NotSupportedException) { }
-            if (ReferenceEquals(fi, null))
-            {
-                // file name is not valid
-                return false;
-            }
-            else
-            {
-                return true;
-                // file name is valid... May check for existence by calling fi.Exists.
-            }
-        }
-
         private async void GeotagRead_Click(object sender, RoutedEventArgs e)
         {
             reader = GTReader.Instance();
@@ -130,7 +108,9 @@ namespace Geotagger_V2
             BrowseInputRead.IsEnabled = false;
             BrowseOutputRead.IsEnabled = false;
             GeotagRead.IsEnabled = false;
-            bool format = isFileValid(mOutputPath);
+            TabItemWrite.IsEnabled = false;
+            manager = null;
+            bool format = Utilities.isFileValid(mOutputPath);
 
             if (format)
             {
@@ -161,8 +141,7 @@ namespace Geotagger_V2
                 MessageBoxButtons buttons = MessageBoxButtons.OK;
                 // Displays the MessageBox.
                 System.Windows.Forms.MessageBox.Show(message, caption, buttons);
-            }
-            
+            }          
         }
 
 
@@ -183,58 +162,65 @@ namespace Geotagger_V2
         private async void Geotag_Click(object sender, RoutedEventArgs e)
         {
             manager = GTWriter.Instance(50);
+            manager.Initialise();
             startTimers(manager);
             BrowseDB.IsEnabled = false;
             BrowseInput.IsEnabled = false;
             BrowseOutput.IsEnabled = false;
             Geotag.IsEnabled = false;
             TabItemRead.IsEnabled = false;
+            reader = null;
             var source = new CancellationTokenSource();
             CancellationToken token = source.Token;
             Task worker = Task.Factory.StartNew(() =>
             {
-                showProgressBar();
-                progressIndeterminate(true);
-                manager.photoReader(mInputPath, false);
-                progressIndeterminate(false);
-                TaskStatus result = manager.readDatabase(mDBPath, "").Result;
-                Console.WriteLine(result);            
-                if (result == TaskStatus.RanToCompletion)
-                {
-                    if (manager.updateDuplicateCount == 0)
+            showProgressBar();
+            progressIndeterminate(true);
+            manager.photoReader(mInputPath, false);
+            progressIndeterminate(false);
+            TaskStatus result = manager.readDatabase(mDBPath, "").Result;
+            Console.WriteLine(result);
+                
+                    if (result == TaskStatus.RanToCompletion)
                     {
-                       TaskStatus consumerStatus = manager.writeGeotag(mOutputPath).Result;
-                        if (consumerStatus == TaskStatus.RanToCompletion)
+                        if (manager.updateDuplicateCount == 0)
                         {
-                            Dispatcher.Invoke((Action)(() =>
+                            TaskStatus consumerStatus = manager.writeGeotag(mOutputPath).Result;
+                            if (consumerStatus == TaskStatus.RanToCompletion)
                             {
-                                refreshUI();
-                            }));
+                                Dispatcher.Invoke((Action)(() =>
+                                {
+                                    refreshUI();
+                                }));
+                            }
+                            else
+                            {
+                                Console.WriteLine(consumerStatus);
+                            }
                         }
                         else
                         {
-                            Console.WriteLine(consumerStatus);
+                            MessageBoxResult msgResult = System.Windows.MessageBox.Show("Duplicates detected in the record database",
+                                              "Operation will be cancelled",
+                                              MessageBoxButton.OK,
+                                              MessageBoxImage.Error);
+                            source.Cancel();
+
                         }
-                    } else
-                    {
-                        MessageBoxResult msgResult = System.Windows.MessageBox.Show("Duplicates detected in the record database",
-                                          "Operation will be cancelled",
-                                          MessageBoxButton.OK,
-                                          MessageBoxImage.Error);
-                        source.Cancel();
-                        
+                        if (token.IsCancellationRequested)
+                        {
+                            timer = false;
+                            token.ThrowIfCancellationRequested();
+                        }
                     }
-                    if (token.IsCancellationRequested)
+                    else
                     {
-                        timer = false;
-                        token.ThrowIfCancellationRequested();
-                    }                
-                }
-                else
-                {
-                    Console.WriteLine(result);
-                }
+                        Console.WriteLine(result);
+                    }
+                
+                
             }, token);
+        
             try
             {
                 await Task.WhenAll(worker);

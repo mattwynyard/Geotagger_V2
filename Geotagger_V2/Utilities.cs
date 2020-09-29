@@ -41,6 +41,28 @@ namespace Geotagger_V2
             }
         }
 
+        public static bool isFileValid(string path)
+        {
+            System.IO.FileInfo fi = null;
+            try
+            {
+                fi = new System.IO.FileInfo(path);
+            }
+            catch (ArgumentException) { }
+            catch (System.IO.PathTooLongException) { }
+            catch (NotSupportedException) { }
+            if (ReferenceEquals(fi, null))
+            {
+                // file name is not valid
+                return false;
+            }
+            else
+            {
+                return true;
+                // file name is valid... May check for existence by calling fi.Exists.
+            }
+        }
+
         public static DateTime byteToDate(byte[] b)
         {
             try

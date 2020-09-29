@@ -27,7 +27,7 @@ namespace Geotagger_V2
         /// <param name="zip">searches and reads zip directory for .jpg files</param>
         public virtual void photoReader(string path, bool zip)
         {
-            photoQueue = new BlockingCollection<string>(); ;
+            photoQueue = new BlockingCollection<string>(); 
             string initialMessage = "Searching directories...";
             Interlocked.Exchange(ref _progressMessage, initialMessage);
             Task search = Task.Factory.StartNew(() =>

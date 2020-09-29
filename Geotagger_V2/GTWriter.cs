@@ -28,35 +28,42 @@ namespace Geotagger_V2
         private int _photosNoRecordCount;
         private int _geotagCount;
         private int _photoNameError;
+        private int _bitmapQueueSize;
         private BlockingCollection<object[]> bitmapQueue;
         private static ManualResetEvent mre = new ManualResetEvent(false);
         private static GTWriter _instance;
 
-        protected GTWriter(int sizeBitmapQueue) 
+        protected GTWriter(int sizeBitmapQueue = 50) 
         {
-            _geotagCount = 0;
-            _progressMessage = "";
-            _progressValue = 0;
-            _progressRecordCount = 0;
-            _progressRecordDictCount = 0;
-            _progressPhotoQueueCount = 0;
-            _progressBitmapQueueCount = 0;
-            _progressRecordDictErrors = 0;
-            _photoCount = 0;
-            _photosNoRecordCount = 0;
-            _photoNameError = 0;
-            RecordDict = new ConcurrentDictionary<string, Record>();
-            bitmapQueue = new BlockingCollection<object[]>(sizeBitmapQueue);
+            //_geotagCount = 0;
+            //_progressMessage = "";
+            //_progressValue = 0;
+            //_progressRecordCount = 0;
+            //_progressRecordDictCount = 0;
+            //_progressPhotoQueueCount = 0;
+            //_progressBitmapQueueCount = 0;
+            //_progressRecordDictErrors = 0;
+            //_photoCount = 0;
+            //_photosNoRecordCount = 0;
+            //_photoNameError = 0;
+            _bitmapQueueSize = sizeBitmapQueue;
+            //bitmapQueue = new BlockingCollection<object[]>(sizeBitmapQueue);
         }
 
         public static GTWriter Instance(int sizeBitmapQueue = 50)
         {
             if (_instance == null)
             {
-                _instance = new GTWriter(sizeBitmapQueue);
+                _instance = new GTWriter();
+
             }
 
             return _instance;
+        }
+
+        private void intialise(int sizeBitmapQueue)
+        {
+            
         }
 
         public ConcurrentDictionary<string, Record> RecordDict
@@ -70,6 +77,25 @@ namespace Geotagger_V2
             return _geotagCount;
         }
 
+        public void Initialise()
+        {
+            RecordDict = new ConcurrentDictionary<string, Record>(); ;
+            photoQueue = new BlockingCollection<string>();
+            bitmapQueue = new BlockingCollection<object[]>(_bitmapQueueSize);
+            _geotagCount = 0;
+            _progressMessage = "";
+            _progressValue = 0;
+            _progressRecordCount = 0;
+            _progressRecordDictCount = 0;
+            _progressPhotoQueueCount = 0;
+            _progressBitmapQueueCount = 0;
+            _progressRecordDictErrors = 0;
+            _photoCount = 0;
+            _photosNoRecordCount = 0;
+            _photoNameError = 0;
+
+        }
+
         /// <summary>
         /// Establishes connection to access database. Selects all geomarked records using OleDbDataReader.
         /// Tdds records to queue ready for processing.
@@ -80,6 +106,7 @@ namespace Geotagger_V2
         /// <returns></returns>
         public async Task<TaskStatus> readDatabase(string dbPath, string inspector)
         {
+            RecordDict = new ConcurrentDictionary<string, Record>();
             Interlocked.Exchange(ref _progressMessage, "Reading database...");
             Interlocked.Exchange(ref _progressValue, 0);
             string _inspector = Utilities.getInspector(inspector);
