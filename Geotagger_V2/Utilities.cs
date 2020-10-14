@@ -68,9 +68,9 @@ namespace Geotagger_V2
             try
             {
                 string dateTime = Encoding.UTF8.GetString(b);
-                int day = byteToDateInt(b, 0, 2);
-                int month = byteToDateInt(b, 3, 2);
-                int year = byteToDateInt(b, 6, 4);
+                int year = byteToDateInt(b, 0, 4);
+                int month = byteToDateInt(b, 5, 2);
+                int day = byteToDateInt(b, 8, 2);
                 int hour = byteToDateInt(b, 11, 2);
                 int min = byteToDateInt(b, 14, 2);
                 int sec = byteToDateInt(b, 17, 2);
