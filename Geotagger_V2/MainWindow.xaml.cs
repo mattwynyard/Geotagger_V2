@@ -122,12 +122,12 @@ namespace Geotagger_V2
                     progressIndeterminate(true);
                     reader.photoReader(mInputPath, false);
                     progressIndeterminate(false);
+
                     TaskStatus result = reader.readGeotag().Result;
                     if (result == TaskStatus.RanToCompletion)
                     {
 
                     }
-
                 });
                 await Task.WhenAll(worker);
                 ConcurrentQueue<Record> queue = reader.Queue;
@@ -174,12 +174,12 @@ namespace Geotagger_V2
             CancellationToken token = source.Token;
             Task worker = Task.Factory.StartNew(() =>
             {
-            showProgressBar();
-            progressIndeterminate(true);
-            manager.photoReader(mInputPath, false);
-            progressIndeterminate(false);
-            TaskStatus result = manager.readDatabase(mDBPath, "").Result;
-            Console.WriteLine(result);
+                showProgressBar();
+                progressIndeterminate(true);
+                manager.photoReader(mInputPath, false);
+                progressIndeterminate(false);
+                TaskStatus result = manager.readDatabase(mDBPath, "").Result;
+                Console.WriteLine(result);
                 
                     if (result == TaskStatus.RanToCompletion)
                     {
@@ -216,9 +216,7 @@ namespace Geotagger_V2
                     else
                     {
                         Console.WriteLine(result);
-                    }
-                
-                
+                    }  
             }, token);
         
             try
@@ -284,6 +282,7 @@ namespace Geotagger_V2
                 ProgressLabel2.Content = reader.updateProgessMessage;
                 ProgressBar2.Value = reader.updateProgessValue;
                 PhotoCountLabelReader.Content = "Processing photo: " + (reader.updateRecordQueueCount) + " of " + reader.updatePhotoCount;
+                ErrorLabelReader.Content = "Errors: " + reader.updateErrorCount;
             }
         }
 

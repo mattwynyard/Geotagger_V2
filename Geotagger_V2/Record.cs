@@ -17,6 +17,7 @@ namespace Geotagger_V2
         public double pdop;
         public string inspector;
         public DateTime timestamp;
+        public DateTime gpstime;
         public bool geomark;
         public bool geotag;
         public string path;
@@ -174,6 +175,18 @@ namespace Geotagger_V2
                 timestamp = value;
             }
         }
+
+        public DateTime GPSTimeStamp
+        {
+            get
+            {
+                return gpstime;
+            }
+            set
+            {
+                gpstime = value;
+            }
+        }
         public bool GeoMark
         {
             get
@@ -207,7 +220,6 @@ namespace Geotagger_V2
             StringBuilder s = new StringBuilder();
             s.Append(id + ",");
             s.Append(PhotoName + ",");
-            s.Append(PhotoRename + ",");
             s.Append(Latitude + ",");
             s.Append(Longitude + ",");
             s.Append(Altitude + ",");
@@ -215,9 +227,8 @@ namespace Geotagger_V2
             s.Append(Velocity + ",");
             s.Append(Satellites + ",");
             s.Append(PDop + ",");
-            s.Append(Inspector + ",");
-            s.Append(TimeStamp);
-
+            s.Append(TimeStamp + ",");
+            s.Append(GPSTimeStamp);
 
             return s.ToString();
         }
@@ -227,7 +238,6 @@ namespace Geotagger_V2
             StringBuilder s = new StringBuilder();
             s.Append("ID,");
             s.Append("PhotoName,");
-            s.Append("PhotoRename,");
             s.Append("Latitude,");
             s.Append("Longitude,");
             s.Append("Altitude,");
@@ -235,8 +245,8 @@ namespace Geotagger_V2
             s.Append("Velocity,");
             s.Append("Satellites,");
             s.Append("PDop,");
-            s.Append("Inspector,");
-            s.Append("TimeStamp");
+            s.Append("TimeStamp,");
+            s.Append("GPSTimeStamp");
             return s.ToString();
         }
 
@@ -251,7 +261,8 @@ namespace Geotagger_V2
             s.Append(Longitude + ",");
             s.Append(Altitude + ",");
             s.Append(Inspector + ",");
-            s.Append(TimeStamp);
+            s.Append(TimeStamp + ",");
+            s.Append(GPSTimeStamp);
             return s.ToString();
         }
     }

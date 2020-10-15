@@ -99,6 +99,28 @@ namespace Geotagger_V2
             }
         }
 
+        public static DateTime byteToDate(byte[] b, string date)
+        {
+            try
+            {
+                int len = b.Length;
+                int year = Int32.Parse(date.Substring(0, 4));
+                int month = Int32.Parse(date.Substring(5, 2));
+                int day = Int32.Parse(date.Substring(8, 2));
+                int hour = BitConverter.ToInt32(b, 0);
+
+                int minute = BitConverter.ToInt32(b, 8);
+                int second = BitConverter.ToInt32(b, 16);
+                return new DateTime(year, month, day, hour, minute, second);
+            } catch (FormatException ex)
+            {
+                Console.WriteLine(ex.StackTrace);
+                return new DateTime();
+            }
+
+            
+        }
+
         public static double byteToDecimal(byte[] b) //type 5
         {
             double numerator = BitConverter.ToInt32(b, 0);

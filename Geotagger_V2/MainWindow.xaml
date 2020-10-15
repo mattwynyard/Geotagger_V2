@@ -93,6 +93,7 @@
                     <Label Content="Time Elapsed:" HorizontalAlignment="Left" Margin="34,222,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.682,-0.804" Width="85" Grid.Column="4"/>
                     <Label x:Name="TimeLabelReader" Content="00:00:00.00" HorizontalAlignment="Left" Margin="119,222,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.179,-0.547" Width="81" Grid.Column="4"/>
                     <Label x:Name="PhotoCountLabelReader" Content="Processing Photo: 0 of 0" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.791,-0.491" Width="225" Margin="34,253,0,0" Grid.Column="4"/>
+                    <Label x:Name="ErrorLabelReader" Content="Errors: 0" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.791,-0.491" Width="225" Margin="34,279,0,0" Grid.Column="4"/>
                 </Grid>
             </TabItem>
         </TabControl>

@@ -28,26 +28,14 @@ namespace Geotagger_V2
         private int _photosNoRecordCount;
         private int _geotagCount;
         private int _photoNameError;
-        private int _bitmapQueueSize;
+        private static int _bitmapQueueSize;
         private BlockingCollection<object[]> bitmapQueue;
         private static ManualResetEvent mre = new ManualResetEvent(false);
         private static GTWriter _instance;
 
         protected GTWriter(int sizeBitmapQueue = 50) 
         {
-            //_geotagCount = 0;
-            //_progressMessage = "";
-            //_progressValue = 0;
-            //_progressRecordCount = 0;
-            //_progressRecordDictCount = 0;
-            //_progressPhotoQueueCount = 0;
-            //_progressBitmapQueueCount = 0;
-            //_progressRecordDictErrors = 0;
-            //_photoCount = 0;
-            //_photosNoRecordCount = 0;
-            //_photoNameError = 0;
             _bitmapQueueSize = sizeBitmapQueue;
-            //bitmapQueue = new BlockingCollection<object[]>(sizeBitmapQueue);
         }
 
         public static GTWriter Instance(int sizeBitmapQueue = 50)
@@ -55,15 +43,11 @@ namespace Geotagger_V2
             if (_instance == null)
             {
                 _instance = new GTWriter();
+                _bitmapQueueSize = sizeBitmapQueue;
 
             }
 
             return _instance;
-        }
-
-        private void intialise(int sizeBitmapQueue)
-        {
-            
         }
 
         public ConcurrentDictionary<string, Record> RecordDict
@@ -230,7 +214,8 @@ namespace Geotagger_V2
                     }
                     catch (Exception ex)
                     {
-                        string s = ex.Message;
+                        Console.WriteLine(ex.Message);
+                        Console.WriteLine(ex.StackTrace);
                     }
                     Interlocked.Increment(ref i);
                     double newvalue = ((double)i / (double)_photoCount) * 100;
