@@ -17,6 +17,7 @@ using System.Windows.Threading;
 using Emgu.CV;
 using Emgu.CV.Structure;
 
+
 namespace Geotagger_V2
 {
     public class GTWriter : GeotagManger

@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Threading;
+using Amazon;
+using Amazon.S3;
+using Amazon.S3.Model;
 
 namespace Geotagger_V2
 {
@@ -27,6 +30,7 @@ namespace Geotagger_V2
         private bool timer = false;
         private int startCount = 0;
         private bool writeMode; //write or read mode
+        private IAmazonS3 s3Client;
 
         public MainWindow()
         {
@@ -411,6 +415,21 @@ namespace Geotagger_V2
         {
             Console.WriteLine(txtOutputPathRead.Text);
             mOutputPath = txtOutputPathRead.Text;
+        }
+
+        private void Upload_Click(object sender, RoutedEventArgs e)
+        {
+
+            s3Client = new AmazonS3Client();
+            if (s3Client != null)
+            {
+                Console.WriteLine(s3Client);
+                ListBucketsResponse buckets = s3Client.ListBuckets();
+                foreach (var bucket in buckets.Buckets)
+                {
+                    Console.WriteLine(bucket.BucketName);
+                }
+            }
         }
     }
 }

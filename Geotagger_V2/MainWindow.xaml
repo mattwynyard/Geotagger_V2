@@ -38,7 +38,7 @@
                     <Label Content="Output Path" HorizontalAlignment="Left" Height="27" Margin="0,128,0,0" VerticalAlignment="Top" Width="84" RenderTransformOrigin="0.58,1.863" Grid.ColumnSpan="5" Grid.Column="1"/>
                     <Button x:Name="BrowseInput" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="501,85,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="5"/>
                     <Button x:Name="BrowseOutput" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="501,131,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="5"/>
-                    <Button x:Name="Geotag" Content="Geotag" HorizontalAlignment="Left" Margin="501,180,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Geotag_Click" Grid.Column="5"/>
+                    <Button x:Name="Geotag" Content="Geotag" HorizontalAlignment="Left" Margin="501,184,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Geotag_Click" Grid.Column="5"/>
                     <ProgressBar Name="ProgressBar1" HorizontalAlignment="Left" Height="31" Margin="20,186,0,0" VerticalAlignment="Top" Width="476" Grid.Column="5"/>
                     <TextBlock  Name="ProgressText" Text="{Binding ElementName=ProgressBar1, Path=Value, StringFormat={}{0:0}%}" Margin="254,0,595,320" Height="17" Width="32" RenderTransformOrigin="-0.2,0.359" VerticalAlignment="Bottom" Grid.Column="5" />
                     <Label Name="ProgressLabel" HorizontalAlignment="Left" Margin="20,161,0,0" VerticalAlignment="Top" Width="225" Height="25" Grid.Column="5"/>
@@ -63,6 +63,7 @@
                         </Grid>
                     </Expander>
                     <Label x:Name="SpeedLabel" Content="Items/sec: 0" HorizontalAlignment="Left" Margin="254,246,0,0" VerticalAlignment="Top" Width="192" Grid.Column="5"/>
+                    <Button x:Name="Upload" Content="Upload" HorizontalAlignment="Left" Margin="689,184,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Upload_Click" Grid.Column="5"/>
 
                 </Grid>
             </TabItem>

@@ -70,6 +70,10 @@ artifacts/
 *.svclog
 *.scc
 
+# Amazon
+App.config
+
+
 # Chutzpah Test files
 _Chutzpah*
 
