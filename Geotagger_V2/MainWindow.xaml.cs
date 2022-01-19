@@ -423,7 +423,7 @@ namespace Geotagger_V2
             s3Client = new AmazonS3Client();
             if (s3Client != null)
             {
-                Console.WriteLine(s3Client);
+                //Console.WriteLine(s3Client);
                 ListBucketsResponse buckets = s3Client.ListBuckets();
                 foreach (var bucket in buckets.Buckets)
                 {
