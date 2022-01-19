@@ -71,7 +71,7 @@ artifacts/
 *.scc
 
 # Amazon
-App.config
+Geotagger_V2/App.config
 
 
 # Chutzpah Test files
