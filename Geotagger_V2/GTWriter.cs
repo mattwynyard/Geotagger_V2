@@ -28,6 +28,7 @@ namespace Geotagger_V2
         private int _photosNoRecordCount;
         private int _geotagCount;
         private int _photoNameError;
+        private int _bitmapError = 0;
         private static int _bitmapQueueSize;
         private BlockingCollection<object[]> bitmapQueue;
         private static ManualResetEvent mre = new ManualResetEvent(false);
@@ -377,8 +378,16 @@ namespace Geotagger_V2
             {
                 String s = ex.StackTrace;
             }
+            
             object[] o = { threadInfo, bmp };
-            bitmapQueue.Add(o);
+            if (o[1] != null)
+            {
+                bitmapQueue.Add(o);
+            } else
+            {
+                _bitmapError++;
+            }
+                
             Interlocked.Exchange(ref _progressBitmapQueueCount, bitmapQueue.Count);
             mre.Set();
             return r;
