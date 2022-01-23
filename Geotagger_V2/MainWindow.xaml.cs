@@ -326,22 +326,22 @@ namespace Geotagger_V2
             });
         }
 
-        private void hideProgressBar()
-        {
-            Dispatcher.Invoke((Action)(() => {
-                if (writeMode)
-                {
-                    ProgressBar1.Visibility = Visibility.Hidden;
-                    ProgressText.Visibility = Visibility.Hidden;
-                    ProgressLabel.Visibility = Visibility.Hidden;
-                } else
-                {
-                    ProgressBar2.Visibility = Visibility.Hidden;
-                    ProgressText2.Visibility = Visibility.Hidden;
-                    ProgressLabel2.Visibility = Visibility.Hidden;
-                }
-            }));
-        }
+        //private void hideProgressBar()
+        //{
+        //    Dispatcher.Invoke((Action)(() => {
+        //        if (writeMode)
+        //        {
+        //            ProgressBar1.Visibility = Visibility.Hidden;
+        //            ProgressText.Visibility = Visibility.Hidden;
+        //            ProgressLabel.Visibility = Visibility.Hidden;
+        //        } else
+        //        {
+        //            ProgressBar2.Visibility = Visibility.Hidden;
+        //            ProgressText2.Visibility = Visibility.Hidden;
+        //            ProgressLabel2.Visibility = Visibility.Hidden;
+        //        }
+        //    }));
+        //}
 
 
         private void showProgressBar()
