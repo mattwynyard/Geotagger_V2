@@ -47,22 +47,15 @@ namespace Geotagger_V2
                 BitConverter.GetBytes(x).CopyTo(byteArray, offset);
                 offset += 4;
             }
-            if (item != null)
-            {
-                item.Value = byteArray;
-            }
-            
+            item.Value = byteArray;
             return item;
         }
 
         public PropertyItem getEXIFInt(PropertyItem item, int number)
         {
             int value = number;
-            if (item != null)
-            {
-                item.Value = ASCIIEncoding.ASCII.GetBytes(value.ToString() + "\0");
-                item.Type = 2;
-            }
+            item.Value = ASCIIEncoding.ASCII.GetBytes(value.ToString() + "\0");
+            item.Type = 2;
             return item;
         }
 
@@ -80,10 +73,7 @@ namespace Geotagger_V2
             int[] values = { value };
             byte[] byteArray = new byte[4];
             BitConverter.GetBytes(values[0]).CopyTo(byteArray, 0);
-            if (item != null)
-            {
-                item.Value = byteArray;
-            }
+            item.Value = byteArray;
             return item;
         }
 
@@ -92,10 +82,7 @@ namespace Geotagger_V2
             DateTime date = Convert.ToDateTime(record.TimeStamp.ToString());
             string dateTime = date.ToString("yyyy:MM:dd HH:mm:ss") + "\0";
             byte[] bytes = Encoding.ASCII.GetBytes(dateTime);
-            if (item != null)
-            {
-                item.Value = bytes;
-            }
+            item.Value = bytes;
             return item;
         }
 
@@ -129,44 +116,36 @@ namespace Geotagger_V2
                 BitConverter.GetBytes(value).CopyTo(byteArray, offset);
                 offset += 4;
             }
-            if (item != null)
-            {
-                item.Type = 5;
-                item.Value = byteArray; //write bytes
-            }
+            item.Type = 5;
+            item.Value = byteArray; //write bytes
             return item;
         }
 
         public PropertyItem getEXIFCoordinateRef(String coordinate, PropertyItem item)
         {
-            if (item != null) {
-                if (coordinate.Equals("latitude"))
+            if (coordinate.Equals("latitude"))
+            {
+                if (record.Latitude < 0)
                 {
-                    if (record.Latitude < 0)
-                    {
-                        item.Value = ASCIIEncoding.ASCII.GetBytes("S\0");
-                    }
-                    else
-                    {
-                        item.Value = ASCIIEncoding.ASCII.GetBytes("N\0");
-                    }
+                    item.Value = ASCIIEncoding.ASCII.GetBytes("S\0");
                 }
                 else
                 {
-                    if (record.Longitude < 0)
-                    {
-                        item.Value = ASCIIEncoding.ASCII.GetBytes("W\0");
-                    }
-                    else
-                    {
-                        item.Value = ASCIIEncoding.ASCII.GetBytes("E\0");
-                    }
+                    item.Value = ASCIIEncoding.ASCII.GetBytes("N\0");
                 }
-                return item;
-            } else
+            }
+            else
             {
-                return null;
-            } 
+                if (record.Longitude < 0)
+                {
+                    item.Value = ASCIIEncoding.ASCII.GetBytes("W\0");
+                }
+                else
+                {
+                    item.Value = ASCIIEncoding.ASCII.GetBytes("E\0");
+                }
+            }
+            return item;
         }
     }
 }
