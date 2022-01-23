@@ -38,32 +38,35 @@
                     <Label Content="Output Path" HorizontalAlignment="Left" Height="27" Margin="0,128,0,0" VerticalAlignment="Top" Width="84" RenderTransformOrigin="0.58,1.863" Grid.ColumnSpan="5" Grid.Column="1"/>
                     <Button x:Name="BrowseInput" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="501,85,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="5"/>
                     <Button x:Name="BrowseOutput" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="501,131,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="5"/>
-                    <Button x:Name="Geotag" Content="Geotag" HorizontalAlignment="Left" Margin="501,184,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Geotag_Click" Grid.Column="5"/>
+                    <Button x:Name="Geotag" Content="Geotag" HorizontalAlignment="Left" Margin="675,48,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Geotag_Click" Grid.Column="5"/>
                     <ProgressBar Name="ProgressBar1" HorizontalAlignment="Left" Height="31" Margin="20,186,0,0" VerticalAlignment="Top" Width="476" Grid.Column="5"/>
                     <TextBlock  Name="ProgressText" Text="{Binding ElementName=ProgressBar1, Path=Value, StringFormat={}{0:0}%}" Margin="254,0,595,320" Height="17" Width="32" RenderTransformOrigin="-0.2,0.359" VerticalAlignment="Bottom" Grid.Column="5" />
                     <Label Name="ProgressLabel" HorizontalAlignment="Left" Margin="20,161,0,0" VerticalAlignment="Top" Width="225" Height="25" Grid.Column="5"/>
                     <Label Content="Time Elapsed:" HorizontalAlignment="Left" Margin="20,222,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.682,-0.804" Width="85" Grid.Column="5"/>
                     <Label Name="TimeLabel" Content="00:00:00.00" HorizontalAlignment="Left" Margin="105,222,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.179,-0.547" Width="81" Grid.Column="5"/>
-                    <Expander Header="Details" HorizontalAlignment="Left" Height="203" Margin="20,282,0,0" VerticalAlignment="Top" Width="558" IsExpanded="True" Grid.Column="5">
-                        <Grid Background="#FFE5E5E5">
+                    <Expander Header="Details" HorizontalAlignment="Left" Height="203" Margin="20,282,0,0" VerticalAlignment="Top" Width="436" IsExpanded="True" Grid.Column="5">
+                        <Grid Background="#FFE5E5E5" Margin="0,0,8,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="9*"/>
-                                <ColumnDefinition Width="267*"/>
-                                <ColumnDefinition Width="280*"/>
+                                <ColumnDefinition Width="20*"/>
+                                <ColumnDefinition Width="247*"/>
+                                <ColumnDefinition Width="48*"/>
+                                <ColumnDefinition Width="232*"/>
                             </Grid.ColumnDefinitions>
-                            <Label x:Name="RecordDictLabel" Content="Record Dictionary: 0" HorizontalAlignment="Left" Margin="0,31,0,0" VerticalAlignment="Top" Width="174" Height="26" Grid.ColumnSpan="2"/>
-                            <Label x:Name="PhotoQueueLabel" Content="Photo Queue: 0" HorizontalAlignment="Left" Margin="0,57,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.333,0.231" Width="174" Height="26" Grid.ColumnSpan="2"/>
-                            <Label x:Name="BitmapQueueLabel" Content="Bitmap Queue: 0" HorizontalAlignment="Left" Margin="0,83,0,0" VerticalAlignment="Top" Height="26" Width="174" Grid.ColumnSpan="2"/>
-                            <Label x:Name="GeotagLabel" Content="Geotagged: 0" HorizontalAlignment="Left" Margin="0,109,0,0" VerticalAlignment="Top" Width="174" Height="26" Grid.ColumnSpan="2"/>
-                            <Label x:Name="NoRecordLabel" Content="Photos with no record: 0" Grid.Column="2" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="260" Height="26"/>
-                            <Label x:Name="PhotoCountLabel" Content="Processing Photo: 0 of 0" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.791,-0.491" Width="225" Grid.ColumnSpan="2" Margin="0,-58,0,0"/>
-                            <Label x:Name="RecordCountLabel" Content="Records to process: 0" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" Width="227" Grid.ColumnSpan="2"/>
-                            <Label x:Name="DuplicateLabel" Content="Duplicate Records: 0" Grid.Column="2" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" Width="260" Height="26"/>
-                            <Label x:Name="PhotoErrorLabel" Content="Photo Name Errors: 0" Grid.Column="2" HorizontalAlignment="Left" Margin="10,62,0,0" VerticalAlignment="Top" Width="260" Height="26"/>
+                            <Label x:Name="RecordDictLabel" Content="Record Dictionary: 0" HorizontalAlignment="Left" Margin="0,31,0,0" VerticalAlignment="Top" Width="174" Height="26" Grid.ColumnSpan="3"/>
+                            <Label x:Name="PhotoQueueLabel" Content="Photo Queue: 0" HorizontalAlignment="Left" Margin="0,57,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.333,0.231" Width="174" Height="26" Grid.ColumnSpan="3"/>
+                            <Label x:Name="BitmapQueueLabel" Content="Bitmap Queue: 0" HorizontalAlignment="Left" Margin="0,83,0,0" VerticalAlignment="Top" Height="26" Width="174" Grid.ColumnSpan="3"/>
+                            <Label x:Name="GeotagLabel" Content="Geotagged: 0" HorizontalAlignment="Left" Margin="0,109,0,0" VerticalAlignment="Top" Width="174" Height="26" Grid.ColumnSpan="3"/>
+                            <Label x:Name="NoRecordLabel" Content="Photos with no record: 0" Grid.Column="3" Margin="10,10,-119,0" VerticalAlignment="Top" Height="26" Grid.ColumnSpan="2"/>
+                            <Label x:Name="PhotoCountLabel" Content="Processing Photo: 0 of 0" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.791,-0.491" Width="225" Grid.ColumnSpan="4" Margin="0,-58,0,0"/>
+                            <Label x:Name="RecordCountLabel" Content="Records to process: 0" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" Width="227" Grid.ColumnSpan="3"/>
+                            <Label x:Name="DuplicateLabel" Content="Duplicate Records: 0" Grid.Column="3" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" Width="260" Height="26" Grid.ColumnSpan="2"/>
+                            <Label x:Name="PhotoErrorLabel" Content="Photo Name Errors: 0" Grid.Column="3" HorizontalAlignment="Left" Margin="10,62,0,0" VerticalAlignment="Top" Width="260" Height="26" Grid.ColumnSpan="2"/>
                         </Grid>
                     </Expander>
                     <Label x:Name="SpeedLabel" Content="Items/sec: 0" HorizontalAlignment="Left" Margin="254,246,0,0" VerticalAlignment="Top" Width="192" Grid.Column="5"/>
-                    <Button x:Name="Upload" Content="Upload" HorizontalAlignment="Left" Margin="689,184,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Upload_Click" Grid.Column="5"/>
+                    <Button x:Name="Upload" Content="Upload" HorizontalAlignment="Left" Margin="675,105,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Upload_Click" Grid.Column="5"/>
+                    <Label Content="Bucket" Grid.Column="5" HorizontalAlignment="Left" Margin="546,246,0,0" VerticalAlignment="Top" Width="77"/>
 
                 </Grid>
             </TabItem>

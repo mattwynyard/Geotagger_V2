@@ -1,19 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Data.OleDb;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Threading;
 using Emgu.CV;
 using Emgu.CV.Structure;
 
@@ -488,13 +483,18 @@ namespace Geotagger_V2
             }
         }
 
+
+
         private async Task saveFile(Image image, string path)
         {
+            Console.WriteLine("start");
             await Task.Run(() =>
             {
                 try
                 {
                     image.Save(path);
+                    Console.WriteLine("saved");
+
                 }
                 catch (Exception ex)
                 {
@@ -502,6 +502,7 @@ namespace Geotagger_V2
                     Console.WriteLine(err);
                 }
             });
+            Console.WriteLine("end");
         }
 
         [DllImport("mpr.dll", CharSet = CharSet.Unicode, SetLastError = true)]
