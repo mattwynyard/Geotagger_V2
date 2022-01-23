@@ -45,6 +45,8 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
+secret.config
+
 *_i.c
 *_p.c
 *_i.h
@@ -69,6 +71,10 @@ artifacts/
 *.pidb
 *.svclog
 *.scc
+
+# Amazon
+Geotagger_V2/App.config
+
 
 # Chutzpah Test files
 _Chutzpah*
