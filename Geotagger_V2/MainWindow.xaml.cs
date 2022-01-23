@@ -32,7 +32,7 @@ namespace Geotagger_V2
         private bool timer = false;
         private int startCount = 0;
         private bool writeMode; //write or read mode
-        private IAmazonS3 s3Client;
+        private static IAmazonS3 s3Client;
 
         public MainWindow()
         {
@@ -419,38 +419,6 @@ namespace Geotagger_V2
             mOutputPath = txtOutputPathRead.Text;
         }
 
-
-
-        public async void UploadFile(string filePath, string bucketName, string fileName)
-        {
-            try
-            {
-                PutObjectRequest putRequest = new PutObjectRequest
-                {
-                    BucketName = bucketName,
-                    Key = fileName,
-                    FilePath = filePath,       
-            };
-
-                PutObjectResponse response = await s3Client.PutObjectAsync(putRequest);
-                Console.WriteLine(response.HttpStatusCode);
-            }
-            catch (AmazonS3Exception amazonS3Exception)
-            {
-                if (amazonS3Exception.ErrorCode != null &&
-                    (amazonS3Exception.ErrorCode.Equals("InvalidAccessKeyId")
-                    ||
-                    amazonS3Exception.ErrorCode.Equals("InvalidSecurity")))
-                {
-                    throw new Exception("Check the provided AWS Credentials.");
-                }
-                else
-                {
-                    throw new Exception("Error occurred: " + amazonS3Exception.Message);
-                }
-            }
-        }
-
         private async Task<string> UploadFileAsync(string filePath, string bucketName, string fileName)
         {
             string result;
@@ -490,20 +458,60 @@ namespace Geotagger_V2
             return result;
         }
 
+        private static async void UploadFile(string filePath, string bucketName)
+        {
+            string result;
+            string fileName = Path.GetFileName(filePath);
+            try
+            {
+                PutObjectRequest putRequest = new PutObjectRequest
+                {
+                    BucketName = bucketName,
+                    Key = fileName,
+                    FilePath = filePath,
+                };
+
+                PutObjectResponse response = await s3Client.PutObjectAsync(putRequest);
+                result = response.HttpStatusCode.ToString();
+                Console.WriteLine(fileName + ":" + result);
+            }
+            catch (AmazonS3Exception amazonS3Exception)
+            {
+                if (amazonS3Exception.ErrorCode != null &&
+                    (amazonS3Exception.ErrorCode.Equals("InvalidAccessKeyId")
+                    ||
+                    amazonS3Exception.ErrorCode.Equals("InvalidSecurity")))
+                {
+                    throw new Exception("Check the provided AWS Credentials.");
+                }
+                else
+                {
+                    throw new Exception("Error occurred: " + amazonS3Exception.Message);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(
+                    "Unknown encountered on server. Message:'{0}' when writing an object"
+                    , e.Message);
+                result = e.ToString();
+            }
+            //return result;
+        }
+
 
         private void Upload_Click(object sender, RoutedEventArgs e)
         {
-
+            //Task worker = Task.Factory.StartNew(() =>
+            //{
             s3Client = new AmazonS3Client();
             ConcurrentQueue<string> fileQueue = new ConcurrentQueue<string>();
+
             if (s3Client != null)
             {
-                Console.WriteLine(s3Client);
-                
-                string targetDirectory = @"C:\Users\matt\Documents\Onsite\temp\onsite_record_21_12_09\";
-                string[] fileEntries = Directory.GetFiles(targetDirectory);
-                string bucketName = "akl-south-urban/test/1";
-
+                string targetDirectory = @"S:\Geotagger\Testing\test\";
+                string[] filePaths = Directory.GetFiles(targetDirectory);
+                //string bucketName = "akl-south-urban/test/1";
                 var listResponse = s3Client.ListObjectsV2(new ListObjectsV2Request
                 {
                     BucketName = "akl-south-urban",
@@ -511,43 +519,92 @@ namespace Geotagger_V2
                 });
                 if (listResponse.S3Objects.Count > 0)
                 {
-                    foreach (string filePath in fileEntries)
+                    List<Action> actionsArray = new List<Action>();
+                    foreach (string filePath in filePaths)
                     {
-                        string fileName = Path.GetFileName(filePath);
-                        fileQueue.Enqueue(filePath);
-                    }
-                }
-                var watch = Stopwatch.StartNew();
-                Task worker = Task.Factory.StartNew(() =>
-                {
-                    
-                    int count = 0;
-                    int error = 0;
-                    while (!fileQueue.IsEmpty)
-                    {
-                        string path;
-                        fileQueue.TryDequeue(out path);
-                        string fileName = Path.GetFileName(path);
-                        string status = UploadFileAsync(path, bucketName, fileName).Result;
-                        Console.WriteLine(status);
-                        if (status == "OK")
-                        {
-                            count++;
 
-                        }
-                        else
-                        {
-                            Console.WriteLine(status);
-                            error++;
-                        }
-                        Console.WriteLine(count);
+                        
+                        string bucketName = "akl-south-urban/test/1";
+                        actionsArray.Add(new Action(() => UploadFile(filePath, bucketName)));
                     }
-                    
-                });
-                worker.Wait();
-                watch.Stop();
-                Console.WriteLine($"Time Taken: { watch.ElapsedMilliseconds} ms.");
+                    Action[] arrayList = actionsArray.ToArray();
+                    var watch = Stopwatch.StartNew();
+
+                    try
+                    {
+                        Parallel.Invoke(new ParallelOptions
+                        {
+                            MaxDegreeOfParallelism = 4
+                        }, arrayList);
+                    }
+                    catch (AggregateException ex)
+                    {
+                        Console.WriteLine("An action has thrown an exception. THIS WAS UNEXPECTED.\n{0}", ex.InnerException.ToString());
+                    }
+                    watch.Stop();
+                    Console.WriteLine($"Time Taken: { watch.ElapsedMilliseconds} ms.");
+                }
+
             }
         }
+
+        //private void Upload_Click(object sender, RoutedEventArgs e)
+        //{
+
+        //    s3Client = new AmazonS3Client();
+        //    ConcurrentQueue<string> fileQueue = new ConcurrentQueue<string>();
+        //    if (s3Client != null)
+        //    {
+        //        Console.WriteLine(s3Client);
+
+        //        string targetDirectory = @"S:\Geotagger\Testing\test\";
+        //        string[] fileEntries = Directory.GetFiles(targetDirectory);
+        //        string bucketName = "akl-south-urban/test/1";
+
+        //        var listResponse = s3Client.ListObjectsV2(new ListObjectsV2Request
+        //        {
+        //            BucketName = "akl-south-urban",
+        //            Prefix = "test/1"
+        //        });
+        //        if (listResponse.S3Objects.Count > 0)
+        //        {
+        //            foreach (string filePath in fileEntries)
+        //            {
+        //                string fileName = Path.GetFileName(filePath);
+        //                fileQueue.Enqueue(filePath);
+        //            }
+        //        }
+        //        var watch = Stopwatch.StartNew();
+        //        Task worker = Task.Factory.StartNew(() =>
+        //        {
+
+        //            int count = 0;
+        //            int error = 0;
+        //            while (!fileQueue.IsEmpty)
+        //            {
+        //                string path;
+        //                fileQueue.TryDequeue(out path);
+        //                string fileName = Path.GetFileName(path);
+        //                string status = UploadFileAsync(path, bucketName, fileName).Result;
+        //                Console.WriteLine(status);
+        //                if (status == "OK")
+        //                {
+        //                    count++;
+
+        //                }
+        //                else
+        //                {
+        //                    Console.WriteLine(status);
+        //                    error++;
+        //                }
+        //                Console.WriteLine(count);
+        //            }
+
+        //        });
+        //        worker.Wait();
+        //        watch.Stop();
+        //        Console.WriteLine($"Time Taken: { watch.ElapsedMilliseconds} ms.");
+        //    }
+        //}
     }
 }
