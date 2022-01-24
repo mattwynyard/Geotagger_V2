@@ -522,14 +522,11 @@ namespace Geotagger_V2
                     List<Action> actionsArray = new List<Action>();
                     foreach (string filePath in filePaths)
                     {
-
-                        
                         string bucketName = "akl-south-urban/test/1";
                         actionsArray.Add(new Action(() => UploadFile(filePath, bucketName)));
                     }
                     Action[] arrayList = actionsArray.ToArray();
                     var watch = Stopwatch.StartNew();
-
                     try
                     {
                         Parallel.Invoke(new ParallelOptions
@@ -544,7 +541,6 @@ namespace Geotagger_V2
                     watch.Stop();
                     Console.WriteLine($"Time Taken: { watch.ElapsedMilliseconds} ms.");
                 }
-
             }
         }
 
