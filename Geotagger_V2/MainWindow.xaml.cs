@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Threading;
-using Amazon;
 using Amazon.S3;
 using Amazon.S3.Model;
-using Amazon.S3.Transfer;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Geotagger_V2
 {
@@ -33,6 +33,9 @@ namespace Geotagger_V2
         private int startCount = 0;
         private bool writeMode; //write or read mode
         private static IAmazonS3 s3Client;
+        private static ConcurrentQueue<string> fileQueue;
+        private static int uploadSum = 0;
+        private static BlockingCollection<string> errorQueue;
 
         public MainWindow()
         {
@@ -419,99 +422,81 @@ namespace Geotagger_V2
             mOutputPath = txtOutputPathRead.Text;
         }
 
-        //private async Task<string> UploadFileAsync(string filePath, string bucketName, string fileName)
-        //{
-        //    string result;
-        //    try
-        //    {
-        //        PutObjectRequest putRequest = new PutObjectRequest
-        //        {
-        //            BucketName = bucketName,
-        //            Key = fileName,
-        //            FilePath = filePath,
-        //        };
-
-        //        PutObjectResponse response = await s3Client.PutObjectAsync(putRequest);
-        //        result = response.HttpStatusCode.ToString();
-        //    }
-        //    catch (AmazonS3Exception amazonS3Exception)
-        //    {
-        //        if (amazonS3Exception.ErrorCode != null &&
-        //            (amazonS3Exception.ErrorCode.Equals("InvalidAccessKeyId")
-        //            ||
-        //            amazonS3Exception.ErrorCode.Equals("InvalidSecurity")))
-        //        {
-        //            throw new Exception("Check the provided AWS Credentials.");
-        //        }
-        //        else
-        //        {
-        //            throw new Exception("Error occurred: " + amazonS3Exception.Message);
-        //        }
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        Console.WriteLine(
-        //            "Unknown encountered on server. Message:'{0}' when writing an object"
-        //            , e.Message);
-        //        result = e.ToString();
-        //    }
-        //    return result;
-        //}
-
-        private static async void UploadFile(string filePath, string bucketName)
+        private static async void UploadFile(string bucketName)
         {
             string result;
-            string fileName = Path.GetFileName(filePath);
-            try
-            {
-                PutObjectRequest putRequest = new PutObjectRequest
+            string path;
+            while (fileQueue.TryDequeue(out path))
+            { 
+                string fileName = Path.GetFileName(path);
+                try
                 {
-                    BucketName = bucketName,
-                    Key = fileName,
-                    FilePath = filePath,
-                };
+                    PutObjectRequest putRequest = new PutObjectRequest
+                    {
+                        BucketName = bucketName,
+                        Key = fileName,
+                    };
+                    string base64 = checkMD5(path);
+                    //Console.WriteLine(base64);
+                    using (FileStream stream = new FileStream(path, FileMode.Open))
+                    {
+                        putRequest.MD5Digest = base64;
+                        putRequest.InputStream = stream;
+                        PutObjectResponse response = await s3Client.PutObjectAsync(putRequest);
+                        Console.WriteLine(fileName + ": " + response.HttpStatusCode);
+                    }
+                    Interlocked.Add(ref uploadSum, 1);
+                }
+                catch (AmazonS3Exception amazonS3Exception)
+                {
+                    if (amazonS3Exception.ErrorCode != null &&
+                        (amazonS3Exception.ErrorCode.Equals("InvalidAccessKeyId")
+                        ||
+                        amazonS3Exception.ErrorCode.Equals("InvalidSecurity")))
+                    {
+                        throw new Exception("Check the provided AWS Credentials.");
+                    }
+                    else
+                    {
+                        //Interlocked.Add(ref errorQueue, path);
+                        errorQueue.Add(path);
+                        throw new Exception("Error occurred: " + amazonS3Exception.Message);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(
+                        "Unknown encountered on server. Message:'{0}' when writing an object"
+                        , e.Message);
+                    result = e.ToString();
+                }
+            }
+           
+            Console.WriteLine("exiting thread - queue size: " + uploadSum.ToString());
+        }
 
-                PutObjectResponse response = await s3Client.PutObjectAsync(putRequest);
-                result = response.HttpStatusCode.ToString();
-                Console.WriteLine(fileName + ":" + result);
-            }
-            catch (AmazonS3Exception amazonS3Exception)
+        public static string checkMD5(string path)
+        {
+            using (var md5 = MD5.Create())
             {
-                if (amazonS3Exception.ErrorCode != null &&
-                    (amazonS3Exception.ErrorCode.Equals("InvalidAccessKeyId")
-                    ||
-                    amazonS3Exception.ErrorCode.Equals("InvalidSecurity")))
+                using (var stream = new FileStream(path, FileMode.Open))
                 {
-                    throw new Exception("Check the provided AWS Credentials.");
-                }
-                else
-                {
-                    throw new Exception("Error occurred: " + amazonS3Exception.Message);
+                    return Convert.ToBase64String(md5.ComputeHash(stream));
                 }
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(
-                    "Unknown encountered on server. Message:'{0}' when writing an object"
-                    , e.Message);
-                result = e.ToString();
-            }
-            //return result;
         }
 
 
         private void Upload_Click(object sender, RoutedEventArgs e)
         {
-            //Task worker = Task.Factory.StartNew(() =>
-            //{
             s3Client = new AmazonS3Client();
-            ConcurrentQueue<string> fileQueue = new ConcurrentQueue<string>();
+            fileQueue = new ConcurrentQueue<string>();
+            errorQueue = new BlockingCollection<string>(); 
 
             if (s3Client != null)
             {
-                string targetDirectory = @"S:\Geotagger\Testing\test\";
+                string targetDirectory = @"C:\Users\matt\Documents\Onsite\temp\2021_12\";
                 string[] filePaths = Directory.GetFiles(targetDirectory);
-                //string bucketName = "akl-south-urban/test/1";
                 var listResponse = s3Client.ListObjectsV2(new ListObjectsV2Request
                 {
                     BucketName = "akl-south-urban",
@@ -520,87 +505,36 @@ namespace Geotagger_V2
                 if (listResponse.S3Objects.Count > 0)
                 {
                     List<Action> actionsArray = new List<Action>();
+                    //CancellationTokenSource tokenSource = new CancellationTokenSource();
+                    //CancellationToken token = tokenSource.Token;
                     foreach (string filePath in filePaths)
                     {
                         string bucketName = "akl-south-urban/test/1";
-                        actionsArray.Add(new Action(() => UploadFile(filePath, bucketName)));
+                        actionsArray.Add(new Action(() => UploadFile(bucketName)));
+                        fileQueue.Enqueue(filePath);
                     }
                     Action[] arrayList = actionsArray.ToArray();
+                    Console.WriteLine("Size: " + fileQueue.Count);
                     var watch = Stopwatch.StartNew();
-                    try
+                    Task t = Task.Factory.StartNew(() =>
                     {
-                        Parallel.Invoke(new ParallelOptions
+                        try
                         {
-                            MaxDegreeOfParallelism = 4
-                        }, arrayList);
-                    }
-                    catch (AggregateException ex)
-                    {
-                        Console.WriteLine("An action has thrown an exception. THIS WAS UNEXPECTED.\n{0}", ex.InnerException.ToString());
-                    }
+                            Parallel.Invoke(new ParallelOptions
+                            {
+                                MaxDegreeOfParallelism = 4
+                            }, arrayList);
+                        }
+                        catch (AggregateException ex)
+                        {
+                            Console.WriteLine("An action has thrown an exception. THIS WAS UNEXPECTED.\n{0}", ex.InnerException.ToString());
+                        }
+                    });
+                    t.Wait();
                     watch.Stop();
                     Console.WriteLine($"Time Taken: { watch.ElapsedMilliseconds} ms.");
                 }
             }
         }
-
-        //private void Upload_Click(object sender, RoutedEventArgs e)
-        //{
-
-        //    s3Client = new AmazonS3Client();
-        //    ConcurrentQueue<string> fileQueue = new ConcurrentQueue<string>();
-        //    if (s3Client != null)
-        //    {
-        //        Console.WriteLine(s3Client);
-
-        //        string targetDirectory = @"S:\Geotagger\Testing\test\";
-        //        string[] fileEntries = Directory.GetFiles(targetDirectory);
-        //        string bucketName = "akl-south-urban/test/1";
-
-        //        var listResponse = s3Client.ListObjectsV2(new ListObjectsV2Request
-        //        {
-        //            BucketName = "akl-south-urban",
-        //            Prefix = "test/1"
-        //        });
-        //        if (listResponse.S3Objects.Count > 0)
-        //        {
-        //            foreach (string filePath in fileEntries)
-        //            {
-        //                string fileName = Path.GetFileName(filePath);
-        //                fileQueue.Enqueue(filePath);
-        //            }
-        //        }
-        //        var watch = Stopwatch.StartNew();
-        //        Task worker = Task.Factory.StartNew(() =>
-        //        {
-
-        //            int count = 0;
-        //            int error = 0;
-        //            while (!fileQueue.IsEmpty)
-        //            {
-        //                string path;
-        //                fileQueue.TryDequeue(out path);
-        //                string fileName = Path.GetFileName(path);
-        //                string status = UploadFileAsync(path, bucketName, fileName).Result;
-        //                Console.WriteLine(status);
-        //                if (status == "OK")
-        //                {
-        //                    count++;
-
-        //                }
-        //                else
-        //                {
-        //                    Console.WriteLine(status);
-        //                    error++;
-        //                }
-        //                Console.WriteLine(count);
-        //            }
-
-        //        });
-        //        worker.Wait();
-        //        watch.Stop();
-        //        Console.WriteLine($"Time Taken: { watch.ElapsedMilliseconds} ms.");
-        //    }
-        //}
     }
 }
