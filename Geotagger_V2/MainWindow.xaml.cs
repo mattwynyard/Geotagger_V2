@@ -419,44 +419,44 @@ namespace Geotagger_V2
             mOutputPath = txtOutputPathRead.Text;
         }
 
-        private async Task<string> UploadFileAsync(string filePath, string bucketName, string fileName)
-        {
-            string result;
-            try
-            {
-                PutObjectRequest putRequest = new PutObjectRequest
-                {
-                    BucketName = bucketName,
-                    Key = fileName,
-                    FilePath = filePath,
-                };
+        //private async Task<string> UploadFileAsync(string filePath, string bucketName, string fileName)
+        //{
+        //    string result;
+        //    try
+        //    {
+        //        PutObjectRequest putRequest = new PutObjectRequest
+        //        {
+        //            BucketName = bucketName,
+        //            Key = fileName,
+        //            FilePath = filePath,
+        //        };
 
-                PutObjectResponse response = await s3Client.PutObjectAsync(putRequest);
-                result = response.HttpStatusCode.ToString();
-            }
-            catch (AmazonS3Exception amazonS3Exception)
-            {
-                if (amazonS3Exception.ErrorCode != null &&
-                    (amazonS3Exception.ErrorCode.Equals("InvalidAccessKeyId")
-                    ||
-                    amazonS3Exception.ErrorCode.Equals("InvalidSecurity")))
-                {
-                    throw new Exception("Check the provided AWS Credentials.");
-                }
-                else
-                {
-                    throw new Exception("Error occurred: " + amazonS3Exception.Message);
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(
-                    "Unknown encountered on server. Message:'{0}' when writing an object"
-                    , e.Message);
-                result = e.ToString();
-            }
-            return result;
-        }
+        //        PutObjectResponse response = await s3Client.PutObjectAsync(putRequest);
+        //        result = response.HttpStatusCode.ToString();
+        //    }
+        //    catch (AmazonS3Exception amazonS3Exception)
+        //    {
+        //        if (amazonS3Exception.ErrorCode != null &&
+        //            (amazonS3Exception.ErrorCode.Equals("InvalidAccessKeyId")
+        //            ||
+        //            amazonS3Exception.ErrorCode.Equals("InvalidSecurity")))
+        //        {
+        //            throw new Exception("Check the provided AWS Credentials.");
+        //        }
+        //        else
+        //        {
+        //            throw new Exception("Error occurred: " + amazonS3Exception.Message);
+        //        }
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Console.WriteLine(
+        //            "Unknown encountered on server. Message:'{0}' when writing an object"
+        //            , e.Message);
+        //        result = e.ToString();
+        //    }
+        //    return result;
+        //}
 
         private static async void UploadFile(string filePath, string bucketName)
         {
