@@ -422,83 +422,18 @@ namespace Geotagger_V2
             mOutputPath = txtOutputPathRead.Text;
         }
 
-        private static async void UploadFile(string bucketName)
-        {
-            string result;
-            string path;
-            while (fileQueue.TryDequeue(out path))
-            {
-                ;
-                string fileName = Path.GetFileName(path);
-                try
-                {
-                    PutObjectRequest putRequest = new PutObjectRequest
-                    {
-                        BucketName = bucketName,
-                        Key = fileName,
-                    };
-                    string base64 = checkMD5(path);
-                    //Console.WriteLine(base64);
-                    using (FileStream stream = new FileStream(path, FileMode.Open))
-                    {
-                        putRequest.MD5Digest = base64;
-                        putRequest.InputStream = stream;
-                        PutObjectResponse response = await s3Client.PutObjectAsync(putRequest);
-                        Console.WriteLine(fileName + ": " + response.HttpStatusCode);
-                    }
-                    Interlocked.Add(ref uploadSum, 1);
-                }
-                catch (AmazonS3Exception amazonS3Exception)
-                {
-                    if (amazonS3Exception.ErrorCode != null &&
-                        (amazonS3Exception.ErrorCode.Equals("InvalidAccessKeyId")
-                        ||
-                        amazonS3Exception.ErrorCode.Equals("InvalidSecurity")))
-                    {
-                        throw new Exception("Check the provided AWS Credentials.");
-                    }
-                    else
-                    {
-                        //Interlocked.Add(ref errorQueue, path);
-                        errorQueue.Add(path);
-                        throw new Exception("Error occurred: " + amazonS3Exception.Message);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(
-                        "Unknown encountered on server. Message:'{0}' when writing an object"
-                        , e.Message);
-                    result = e.ToString();
-                }
-            }
-
-            Console.WriteLine("exiting thread - queue size: " + uploadSum.ToString());
-        }
-
-        public static string checkMD5(string path)
-        {
-            using (var md5 = MD5.Create())
-            {
-                using (var stream = new FileStream(path, FileMode.Open))
-                {
-                    return Convert.ToBase64String(md5.ComputeHash(stream));
-                }
-            }
-        }
-
-
         private void Upload_Click(object sender, RoutedEventArgs e)
         {
             string targetDirectory = @"C:\Users\matt\Documents\Onsite\temp\2020_12\"; //local folder
             string bucket = "akl-south-urban";
             string prefix = "test/1";
             Task upload = Task.Factory.StartNew(() =>
-           {
-               AmazonUploader.Intialise(targetDirectory);
-               AmazonUploader.Upload(bucket, prefix);
+            {
+               Console.WriteLine("Processor Count:" + Environment.ProcessorCount);
+               AmazonUploader.Intialise(Environment.ProcessorCount);
+               AmazonUploader.Upload(targetDirectory, bucket, prefix);
 
-           });
+            });
             upload.Wait();
             Console.WriteLine("finish");
            }

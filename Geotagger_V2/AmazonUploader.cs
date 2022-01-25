@@ -18,19 +18,18 @@ namespace Geotagger_V2
         private static ConcurrentQueue<string> fileQueue;
         private static int uploadSum = 0;
         private static BlockingCollection<string> errorQueue;
-        private static string targetDirectory;
+        //private static string targetDirectory;
         private static Semaphore _pool;
-        private static string bucket;
-        private static string prefix;
+        private static int semaphoreCount;
 
-
-        public static void Intialise(string directory)
+        public static void Intialise(int count)
         {
             s3Client = new AmazonS3Client();
             fileQueue = new ConcurrentQueue<string>();
             errorQueue = new BlockingCollection<string>();
-            _pool = new Semaphore(0, 4);
-            targetDirectory = directory;
+            semaphoreCount = count;
+            _pool = new Semaphore(0, count);
+            //targetDirectory = directory;
         }
 
         public static void Reset()
@@ -39,14 +38,14 @@ namespace Geotagger_V2
             s3Client = null;
             fileQueue = null;
             errorQueue = null;
-            targetDirectory = null;
+            //targetDirectory = null;
             uploadSum = 0;
     }
-        public static void Upload(string bucket, string prefix)
+        public static void Upload(string directory, string bucket, string prefix)
         {  
             if (s3Client != null)
             {
-                string[] filePaths = Directory.GetFiles(targetDirectory);
+                string[] filePaths = Directory.GetFiles(directory);
                 var listResponse = s3Client.ListObjectsV2(new ListObjectsV2Request
                 {
                     BucketName = bucket,
@@ -64,14 +63,14 @@ namespace Geotagger_V2
                     Action[] arrayList = actionsArray.ToArray();
                     Console.WriteLine("Size: " + fileQueue.Count);
                     var watch = Stopwatch.StartNew();
-                    _pool.Release(4);
+                    _pool.Release(semaphoreCount);
                     Task t = Task.Factory.StartNew(() =>
                     {
                         try
                         {
                             Parallel.Invoke(new ParallelOptions
                             {
-                                MaxDegreeOfParallelism = 4
+                                MaxDegreeOfParallelism = 1
                             }, arrayList);
                         }
                         catch (AggregateException ex)
@@ -96,7 +95,6 @@ namespace Geotagger_V2
         }
         private static async void UploadFile(string bucketName)
         {
-
             _pool.WaitOne();
             string result;
             string path;
@@ -142,6 +140,7 @@ namespace Geotagger_V2
                         , e.Message);
                     result = e.ToString();
                 }
+                
             }
             _pool.Release();
             Console.WriteLine("exiting thread - uploaded: " + uploadSum.ToString() + " files");
