@@ -427,7 +427,8 @@ namespace Geotagger_V2
             string result;
             string path;
             while (fileQueue.TryDequeue(out path))
-            { 
+            {
+                ;
                 string fileName = Path.GetFileName(path);
                 try
                 {
@@ -471,7 +472,7 @@ namespace Geotagger_V2
                     result = e.ToString();
                 }
             }
-           
+
             Console.WriteLine("exiting thread - queue size: " + uploadSum.ToString());
         }
 
@@ -489,52 +490,17 @@ namespace Geotagger_V2
 
         private void Upload_Click(object sender, RoutedEventArgs e)
         {
-            s3Client = new AmazonS3Client();
-            fileQueue = new ConcurrentQueue<string>();
-            errorQueue = new BlockingCollection<string>(); 
+            string targetDirectory = @"C:\Users\matt\Documents\Onsite\temp\2020_12\"; //local folder
+            string bucket = "akl-south-urban";
+            string prefix = "test/1";
+            Task upload = Task.Factory.StartNew(() =>
+           {
+               AmazonUploader.Intialise(targetDirectory);
+               AmazonUploader.Upload(bucket, prefix);
 
-            if (s3Client != null)
-            {
-                string targetDirectory = @"C:\Users\matt\Documents\Onsite\temp\2021_12\";
-                string[] filePaths = Directory.GetFiles(targetDirectory);
-                var listResponse = s3Client.ListObjectsV2(new ListObjectsV2Request
-                {
-                    BucketName = "akl-south-urban",
-                    Prefix = "test/1"
-                });
-                if (listResponse.S3Objects.Count > 0)
-                {
-                    List<Action> actionsArray = new List<Action>();
-                    //CancellationTokenSource tokenSource = new CancellationTokenSource();
-                    //CancellationToken token = tokenSource.Token;
-                    foreach (string filePath in filePaths)
-                    {
-                        string bucketName = "akl-south-urban/test/1";
-                        actionsArray.Add(new Action(() => UploadFile(bucketName)));
-                        fileQueue.Enqueue(filePath);
-                    }
-                    Action[] arrayList = actionsArray.ToArray();
-                    Console.WriteLine("Size: " + fileQueue.Count);
-                    var watch = Stopwatch.StartNew();
-                    Task t = Task.Factory.StartNew(() =>
-                    {
-                        try
-                        {
-                            Parallel.Invoke(new ParallelOptions
-                            {
-                                MaxDegreeOfParallelism = 4
-                            }, arrayList);
-                        }
-                        catch (AggregateException ex)
-                        {
-                            Console.WriteLine("An action has thrown an exception. THIS WAS UNEXPECTED.\n{0}", ex.InnerException.ToString());
-                        }
-                    });
-                    t.Wait();
-                    watch.Stop();
-                    Console.WriteLine($"Time Taken: { watch.ElapsedMilliseconds} ms.");
-                }
-            }
-        }
+           });
+            upload.Wait();
+            Console.WriteLine("finish");
+           }
     }
 }
