@@ -17,11 +17,10 @@ namespace Geotagger_V2
     {
         private static IAmazonS3 s3Client ;
         private static ConcurrentQueue<string> fileQueue;
-        private static int uploadSum = 0;
+        public static int uploadSum = 0;
         private static BlockingCollection<string> errorQueue;
         private static Semaphore _pool;
         private static int semaphoreCount;
-        private static DispatcherTimer dispatcherTimer;
         private static string _progressMessage;
         public static double _progressValue;
         private static int files;

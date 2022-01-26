@@ -29,6 +29,7 @@ namespace Geotagger_V2
         private int startCount = 0;
         private bool writeMode; //write or read mode
         private bool uploading = false; //write or read mode
+        private int prevUploadCount = 0;
 
         public MainWindow()
         {
@@ -79,6 +80,7 @@ namespace Geotagger_V2
                         {
                             txtBoxOutput.Text = mOutputPath = browseFolderDialog.SelectedPath;
                             Upload.IsEnabled = true;
+                            Geotag.IsEnabled = true;
                         }
                     }
                 } else //read
@@ -108,44 +110,48 @@ namespace Geotagger_V2
 
         private async void GeotagRead_Click(object sender, RoutedEventArgs e)
         {
-            reader = GTReader.Instance();
-            startTimers();
-            BrowseInputRead.IsEnabled = false;
-            BrowseOutputRead.IsEnabled = false;
-            GeotagRead.IsEnabled = false;
-            TabItemWrite.IsEnabled = false;
-            manager = null;
-            bool format = Utilities.isFileValid(mOutputPath);
+            if (directoryHasFiles(mInputPath)) {
+                reader = GTReader.Instance();
+                startTimers();
+                BrowseInputRead.IsEnabled = false;
+                BrowseOutputRead.IsEnabled = false;
+                GeotagRead.IsEnabled = false;
+                TabItemWrite.IsEnabled = false;
+                manager = null;
+                bool format = Utilities.isFileValid(mOutputPath);
 
-            if (format)
-            {
-                var source = new CancellationTokenSource();
-                CancellationToken token = source.Token;
-                Task worker = Task.Factory.StartNew(() =>
+                if (format)
                 {
-                    showProgressBar();
-                    progressIndeterminate(true);
-                    reader.photoReader(mInputPath, false);
-                    progressIndeterminate(false);
-                    TaskStatus result = reader.readGeotag().Result;
-                    if (result == TaskStatus.RanToCompletion)
+                    var source = new CancellationTokenSource();
+                    CancellationToken token = source.Token;
+                    Task worker = Task.Factory.StartNew(() =>
                     {
+                        showProgressBar();
+                        progressIndeterminate(true);
+                        reader.photoReader(mInputPath, false);
+                        progressIndeterminate(false);
+                        TaskStatus result = reader.readGeotag().Result;
+                        if (result == TaskStatus.RanToCompletion)
+                        {
 
-                    }
-                });
-                await Task.WhenAll(worker);
-                ConcurrentQueue<Record> queue = reader.Queue;
-                List<Record> list = queue.ToList();
-                Writer writer = new Writer(list);
-                writer.WriteCSV(mOutputPath);
-            } else
-            {
-                string message = "The output file path is not valid";
-                string caption = "Error in output path";
-                MessageBoxButtons buttons = MessageBoxButtons.OK;
-                // Displays the MessageBox.
-                System.Windows.Forms.MessageBox.Show(message, caption, buttons);
-            }          
+                        }
+                    });
+                    await Task.WhenAll(worker);
+                    ConcurrentQueue<Record> queue = reader.Queue;
+                    List<Record> list = queue.ToList();
+                    Writer writer = new Writer(list);
+                    writer.WriteCSV(mOutputPath);
+                }
+                else
+                {
+                    string message = "The output file path is not valid";
+                    string caption = "Error in output path";
+                    MessageBoxButtons buttons = MessageBoxButtons.OK;
+                    // Displays the MessageBox.
+                    System.Windows.Forms.MessageBox.Show(message, caption, buttons);
+                }
+            } 
+            
         }
 
 
@@ -174,83 +180,87 @@ namespace Geotagger_V2
         /// <param name="e">click event</param>
         private async void Geotag_Click(object sender, RoutedEventArgs e)
         {
-            manager = GTWriter.Instance(50);
-            manager.Initialise();
-            startTimers();
-            BrowseDB.IsEnabled = false;
-            BrowseInput.IsEnabled = false;
-            BrowseOutput.IsEnabled = false;
-            Geotag.IsEnabled = false;
-            TabItemRead.IsEnabled = false;
-            reader = null;
-            var source = new CancellationTokenSource();
-            CancellationToken token = source.Token;
-            Task worker = Task.Factory.StartNew(() =>
+            if (directoryHasFiles(mInputPath) || mInputPath != null)
             {
-                showProgressBar();
-                progressIndeterminate(true);
-                manager.photoReader(mInputPath, false);
-                progressIndeterminate(false);
-                TaskStatus result = manager.readDatabase(mDBPath, "").Result;
-                Console.WriteLine(result);
-                if (result == TaskStatus.RanToCompletion)
+                manager = GTWriter.Instance(50);
+                manager.Initialise();
+                startTimers();
+                BrowseDB.IsEnabled = false;
+                BrowseInput.IsEnabled = false;
+                BrowseOutput.IsEnabled = false;
+                Geotag.IsEnabled = false;
+                TabItemRead.IsEnabled = false;
+                reader = null;
+                var source = new CancellationTokenSource();
+                CancellationToken token = source.Token;
+                Task worker = Task.Factory.StartNew(() =>
                 {
-                    if (manager.updateDuplicateCount == 0)
+                    showProgressBar();
+                    progressIndeterminate(true);
+                    manager.photoReader(mInputPath, false);
+                    progressIndeterminate(false);
+                    TaskStatus result = manager.readDatabase(mDBPath, "").Result;
+                    Console.WriteLine(result);
+                    if (result == TaskStatus.RanToCompletion)
                     {
-                        TaskStatus consumerStatus = manager.writeGeotag(mOutputPath).Result;
-                        if (consumerStatus == TaskStatus.RanToCompletion)
+                        if (manager.updateDuplicateCount == 0)
                         {
-                            Dispatcher.Invoke((Action)(() =>
+                            TaskStatus consumerStatus = manager.writeGeotag(mOutputPath).Result;
+                            if (consumerStatus == TaskStatus.RanToCompletion)
                             {
-                                refreshUI();
-                            }));
+                                Dispatcher.Invoke((Action)(() =>
+                                {
+                                    refreshUI();
+                                }));
+                            }
+                            else
+                            {
+                                Console.WriteLine(consumerStatus);
+                            }
                         }
                         else
                         {
-                            Console.WriteLine(consumerStatus);
+                            MessageBoxResult msgResult = System.Windows.MessageBox.Show("Duplicates detected in the record database",
+                                                "Operation will be cancelled",
+                                                MessageBoxButton.OK,
+                                                MessageBoxImage.Error);
+                            source.Cancel();
+
+                        }
+                        if (token.IsCancellationRequested)
+                        {
+                            timer = false;
+                            token.ThrowIfCancellationRequested();
                         }
                     }
                     else
                     {
-                        MessageBoxResult msgResult = System.Windows.MessageBox.Show("Duplicates detected in the record database",
-                                            "Operation will be cancelled",
-                                            MessageBoxButton.OK,
-                                            MessageBoxImage.Error);
-                        source.Cancel();
+                        Console.WriteLine(result);
+                    }
+                }, token);
 
-                    }
-                    if (token.IsCancellationRequested)
-                    {
-                        timer = false;
-                        token.ThrowIfCancellationRequested();
-                    }
-                }
-                else
+                try
                 {
-                    Console.WriteLine(result);
-                }  
-            }, token);
-        
-            try
-            {
-                await Task.WhenAll(worker);
-            } catch (OperationCanceledException ex)
-            {
-                manager.updateProgessMessage = "Cancelled";
-                refreshUI();
+                    await Task.WhenAll(worker);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    manager.updateProgessMessage = "Cancelled";
+                    refreshUI();
+                }
+                BrowseDB.IsEnabled = true;
+                BrowseInput.IsEnabled = true;
+                BrowseOutput.IsEnabled = true;
+                Geotag.IsEnabled = true;
+                TabItemRead.IsEnabled = true;
+                dispatcherTimer.Stop();
+                timer = false;
+                TimeSpan ts = stopwatch.Elapsed;
+                string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                LogWriter log = new LogWriter(manager);
+                log.Write(mDBPath, elapsedTime);
             }
-            BrowseDB.IsEnabled = true;
-            BrowseInput.IsEnabled = true;
-            BrowseOutput.IsEnabled = true;
-            Geotag.IsEnabled = true;
-            TabItemRead.IsEnabled = true;
-            dispatcherTimer.Stop();
-            timer = false;
-            TimeSpan ts = stopwatch.Elapsed;
-            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-            ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-            LogWriter log = new LogWriter(manager);
-            log.Write(mDBPath, elapsedTime);
         }
 
         /// <summary>
@@ -273,20 +283,23 @@ namespace Geotagger_V2
                     startCount = geotagCount;
                     refreshUI();
                 }
-            }
-                    
+            }         
             else
             {
-                Console.WriteLine("reader");
                 refreshUI();
-            }
-                     
+            }                 
         }
 
         private void refreshUI()
         {
             if (uploading)
             {
+                int uploaded = AmazonUploader.uploadSum - prevUploadCount;
+                if (uploaded != 0)
+                {
+                    prevUploadCount = AmazonUploader.uploadSum;
+                    SpeedLabel.Content = "Items/sec: " + uploaded;
+                }
                 ProgressBar1.Value = AmazonUploader.updateProgessValue;
                 ProgressLabel.Content = AmazonUploader.updateProgessMessage;
             } else
@@ -444,7 +457,13 @@ namespace Geotagger_V2
 
         public bool directoryHasFiles(string path)
         {
-            return Directory.EnumerateFileSystemEntries(path).Any();
+            if (path != null)
+            {
+                return Directory.EnumerateFileSystemEntries(path).Any();
+            } else
+            {
+                return false;
+            }
         }
 
         private void Upload_Click(object sender, RoutedEventArgs e)
@@ -456,7 +475,7 @@ namespace Geotagger_V2
             {
                 string bucket = "akl-south-urban";
                 string prefix = "test/1";
-                startTimers(10);
+                startTimers(500);
                 Amazon amazon = new Amazon(Environment.ProcessorCount);
                 Task upload = Task.Factory.StartNew(() =>
                 {
@@ -473,6 +492,11 @@ namespace Geotagger_V2
                         t.Wait();
                         uploading = false;
                         dispatcherTimer.Stop();
+                        prevUploadCount = 0;
+                        Dispatcher.Invoke((Action)(() =>
+                        {
+                            SpeedLabel.Content = "Items/sec: 0";
+                        }));
                         timer = false;
                     }
                     catch { }
