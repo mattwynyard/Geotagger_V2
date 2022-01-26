@@ -59,6 +59,7 @@ namespace Geotagger_V2
                     List<Task> taskList = new List<Task>();
                     foreach (string filePath in filePaths)
                     {
+                        Interlocked.Exchange(ref _progressMessage, "Building queue");
                         fileQueue.Enqueue(filePath);
                     }
                     for (int i = 0; i < semaphoreCount + 1; i++) //+ 1 thread that blocks t until all workers finish
@@ -70,7 +71,7 @@ namespace Geotagger_V2
                     files = fileQueue.Count;
                     var watch = Stopwatch.StartNew();
                     _pool.Release(semaphoreCount);
-                    Interlocked.Exchange(ref _progressMessage, "Uploading.....");
+                    Interlocked.Exchange(ref _progressMessage, "Uploading..... " + uploadSum + " of " + files + " files");
                     try
                     {
                         foreach (Task task in tasks)
@@ -86,15 +87,11 @@ namespace Geotagger_V2
                     try
                     {
                         t.Wait();
-                        Thread.Sleep(2000);
+                        watch.Stop();
+                        Thread.Sleep(1000);
                         Console.WriteLine($"Time Taken: { watch.ElapsedMilliseconds} ms.");
                         Console.WriteLine($"Files uploaded: {uploadSum}");
-                        Console.WriteLine($"Errors: {errorQueue.Count}");
-                        Interlocked.Add(ref uploadSum, 1);
-                        Interlocked.Exchange(ref _progressMessage, "Uploading..... " + uploadSum + " of " + files + " files");
-                        double newValue = ((double)uploadSum / (double)files) * 100;
-                        Interlocked.Exchange(ref _progressValue, newValue);
-                        watch.Stop();
+                        Console.WriteLine($"Errors: {errorQueue.Count}");                  
                     }
                     catch { }
                     
@@ -132,9 +129,7 @@ namespace Geotagger_V2
                         putRequest.MD5Digest = base64;
                         putRequest.InputStream = stream;
                         PutObjectResponse response = await s3Client.PutObjectAsync(putRequest);
-
                     }
-                    
                     Interlocked.Add(ref uploadSum, 1);
                     Interlocked.Exchange(ref _progressMessage, "Uploading..... " + uploadSum + " of " + files + " files");
                     double newValue = ((double)uploadSum / (double)files) * 100;
@@ -151,18 +146,18 @@ namespace Geotagger_V2
                     }
                     else
                     {
-                        errorQueue.Add(path);
+                        
                         throw new Exception("Error occurred: " + amazonS3Exception.Message);
                     }
                 }
                 catch (Exception e)
                 {
+                    errorQueue.Add(path);
                     Console.WriteLine(
                         "Unknown encountered on server. Message:'{0}' when writing an object"
                         , e.Message);
                     result = e.ToString();
-                }
-                
+                }    
             }
             _pool.Release();
             Console.WriteLine("exiting thread");

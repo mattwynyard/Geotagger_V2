@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -69,6 +70,7 @@ namespace Geotagger_V2
                         if (browseFolderDialog.SelectedPath != "")
                         {
                             txtBoxInput.Text = mInputPath = browseFolderDialog.SelectedPath;
+                            
                         }
                     }
                     else
@@ -76,6 +78,7 @@ namespace Geotagger_V2
                         if (browseFolderDialog.SelectedPath != "")
                         {
                             txtBoxOutput.Text = mOutputPath = browseFolderDialog.SelectedPath;
+                            Upload.IsEnabled = true;
                         }
                     }
                 } else //read
@@ -102,6 +105,7 @@ namespace Geotagger_V2
             }
         }
 
+
         private async void GeotagRead_Click(object sender, RoutedEventArgs e)
         {
             reader = GTReader.Instance();
@@ -123,7 +127,6 @@ namespace Geotagger_V2
                     progressIndeterminate(true);
                     reader.photoReader(mInputPath, false);
                     progressIndeterminate(false);
-
                     TaskStatus result = reader.readGeotag().Result;
                     if (result == TaskStatus.RanToCompletion)
                     {
@@ -439,47 +442,44 @@ namespace Geotagger_V2
             mOutputPath = txtOutputPathRead.Text;
         }
 
+        public bool directoryHasFiles(string path)
+        {
+            return Directory.EnumerateFileSystemEntries(path).Any();
+        }
+
         private void Upload_Click(object sender, RoutedEventArgs e)
         {
             uploading = true;
-            string targetDirectory = @"C:\Users\matt\Documents\Onsite\temp\2020_12\"; //local folder
-            string bucket = "akl-south-urban";
-            string prefix = "test/1";
-            startTimers(10);
-            Amazon amazon = new Amazon(Environment.ProcessorCount);
-            Task upload = Task.Factory.StartNew(() =>
+            //string targetDirectory = @"C:\Users\matt\Documents\Onsite\temp\20000\"; //local folder
+            string targetDirectory = mOutputPath;
+            if (directoryHasFiles(mOutputPath))
             {
-                showProgressBar();
-                Console.WriteLine("Processor Count:" + Environment.ProcessorCount);
-                AmazonUploader.Intialise(Environment.ProcessorCount);
-                Task t = Task.Factory.StartNew(() => 
-                    AmazonUploader.Upload(targetDirectory, bucket, prefix)
-                );
-                Task.WhenAll(t);
-                try
+                string bucket = "akl-south-urban";
+                string prefix = "test/1";
+                startTimers(10);
+                Amazon amazon = new Amazon(Environment.ProcessorCount);
+                Task upload = Task.Factory.StartNew(() =>
                 {
-                    t.Wait();
-                    uploading = false;
-                    dispatcherTimer.Stop();
-                    timer = false;
-                }
-                catch { }
-
-                //uploading = false;
-                //dispatcherTimer.Stop();
-                //timer = false;
-            });
-            //Task t = Task.WhenAll(upload);
-            //try
-            //{
-            //    t.Wait();
-            //    //uploading = false;
-            //    //dispatcherTimer.Stop();
-            //    //timer = false;
-            //}
-            //catch { }
-
-
+                    showProgressBar();
+                    progressIndeterminate(false);
+                    Console.WriteLine("Processor Count:" + Environment.ProcessorCount);
+                    AmazonUploader.Intialise(Environment.ProcessorCount);
+                    Task t = Task.Factory.StartNew(() =>
+                        AmazonUploader.Upload(targetDirectory, bucket, prefix)
+                    );
+                    Task.WhenAll(t);
+                    try
+                    {
+                        t.Wait();
+                        uploading = false;
+                        dispatcherTimer.Stop();
+                        timer = false;
+                    }
+                    catch { }
+                });
+            }
+            
+            
         }
     }
 }

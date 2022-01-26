@@ -65,7 +65,7 @@
                         </Grid>
                     </Expander>
                     <Label x:Name="SpeedLabel" Content="Items/sec: 0" HorizontalAlignment="Left" Margin="254,246,0,0" VerticalAlignment="Top" Width="192" Grid.Column="5"/>
-                    <Button x:Name="Upload" Content="Upload" HorizontalAlignment="Left" Margin="675,105,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Upload_Click" Grid.Column="5"/>
+                    <Button x:Name="Upload" Content="Upload" HorizontalAlignment="Left" Margin="675,105,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Upload_Click" Grid.Column="5" IsEnabled="False"/>
                     <Label Content="Bucket" Grid.Column="5" HorizontalAlignment="Left" Margin="546,246,0,0" VerticalAlignment="Top" Width="77"/>
 
                 </Grid>
