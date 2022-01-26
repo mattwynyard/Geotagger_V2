@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Geotagger_V2
 {
-    class Class1
+    class Class2
     {
     }
 }

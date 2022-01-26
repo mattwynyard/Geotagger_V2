@@ -90,6 +90,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Amazon.cs" />
     <Compile Include="AmazonUploader.cs" />
     <Compile Include="CorrectionUtil.cs" />
     <Compile Include="GeotagManger.cs" />

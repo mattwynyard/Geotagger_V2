@@ -13,20 +13,20 @@ using System.Windows.Threading;
 
 namespace Geotagger_V2
 {
-    public static class AmazonUploader
+    public class Amazon
     {
-        private static IAmazonS3 s3Client ;
-        private static ConcurrentQueue<string> fileQueue;
-        private static int uploadSum = 0;
-        private static BlockingCollection<string> errorQueue;
-        private static Semaphore _pool;
-        private static int semaphoreCount;
-        private static DispatcherTimer dispatcherTimer;
-        private static string _progressMessage;
-        public static double _progressValue;
-        private static int files;
+        private IAmazonS3 s3Client;
+        private ConcurrentQueue<string> fileQueue;
+        private int uploadSum = 0;
+        private BlockingCollection<string> errorQueue;
+        private Semaphore _pool;
+        private int semaphoreCount;
+        private DispatcherTimer dispatcherTimer;
+        private string _progressMessage;
+        public double _progressValue;
+        private int files;
 
-        public static void Intialise(int count)
+        public Amazon(int count)
         {
             s3Client = new AmazonS3Client();
             fileQueue = new ConcurrentQueue<string>();
@@ -35,7 +35,7 @@ namespace Geotagger_V2
             _pool = new Semaphore(0, count);
         }
 
-        public static void Dispose()
+        public void Dispose()
         {
             s3Client.Dispose();
             s3Client = null;
@@ -43,8 +43,8 @@ namespace Geotagger_V2
             errorQueue = null;
             uploadSum = 0;
         }
-        public static void Upload(string directory, string bucket, string prefix)
-        {  
+        public void Upload(string directory, string bucket, string prefix)
+        {
             if (s3Client != null)
             {
                 string[] filePaths = Directory.GetFiles(directory);
@@ -70,7 +70,6 @@ namespace Geotagger_V2
                     files = fileQueue.Count;
                     var watch = Stopwatch.StartNew();
                     _pool.Release(semaphoreCount);
-                    Interlocked.Exchange(ref _progressMessage, "Uploading.....");
                     try
                     {
                         foreach (Task task in tasks)
@@ -82,22 +81,11 @@ namespace Geotagger_V2
                     {
                         Console.WriteLine("An action has thrown an exception. THIS WAS UNEXPECTED.\n{0}", ex.InnerException.ToString());
                     }
-                    Task t = Task.WhenAll(tasks);
-                    try
-                    {
-                        t.Wait();
-                        Thread.Sleep(2000);
-                        Console.WriteLine($"Time Taken: { watch.ElapsedMilliseconds} ms.");
-                        Console.WriteLine($"Files uploaded: {uploadSum}");
-                        Console.WriteLine($"Errors: {errorQueue.Count}");
-                        Interlocked.Add(ref uploadSum, 1);
-                        Interlocked.Exchange(ref _progressMessage, "Uploading..... " + uploadSum + " of " + files + " files");
-                        double newValue = ((double)uploadSum / (double)files) * 100;
-                        Interlocked.Exchange(ref _progressValue, newValue);
-                        watch.Stop();
-                    }
-                    catch { }
-                    
+                    Task.WaitAll(tasks);
+                    watch.Stop();
+                    Console.WriteLine($"Time Taken: { watch.ElapsedMilliseconds} ms.");
+                    Console.WriteLine($"Files uploaded: {uploadSum}");
+                    Console.WriteLine($"Errors: {errorQueue.Count}");
                 }
                 else
                 {
@@ -108,17 +96,16 @@ namespace Geotagger_V2
             {
                 //alert no amazon connection
             }
+
         }
-        private static async void UploadFile(string bucketName)
+        private async void UploadFile(string bucketName)
         {
             _pool.WaitOne();
             string result;
             string path;
             while (fileQueue.TryDequeue(out path))
             {
-                
                 string fileName = Path.GetFileName(path);
-                
                 try
                 {
                     PutObjectRequest putRequest = new PutObjectRequest
@@ -132,11 +119,9 @@ namespace Geotagger_V2
                         putRequest.MD5Digest = base64;
                         putRequest.InputStream = stream;
                         PutObjectResponse response = await s3Client.PutObjectAsync(putRequest);
-
+                        Console.WriteLine(fileName + ": " + response.HttpStatusCode);
                     }
-                    
                     Interlocked.Add(ref uploadSum, 1);
-                    Interlocked.Exchange(ref _progressMessage, "Uploading..... " + uploadSum + " of " + files + " files");
                     double newValue = ((double)uploadSum / (double)files) * 100;
                     Interlocked.Exchange(ref _progressValue, newValue);
                 }
@@ -162,13 +147,13 @@ namespace Geotagger_V2
                         , e.Message);
                     result = e.ToString();
                 }
-                
+
             }
             _pool.Release();
             Console.WriteLine("exiting thread");
         }
 
-        public static string checkMD5(string path)
+        public string checkMD5(string path)
         {
             using (var md5 = MD5.Create())
             {
@@ -179,7 +164,7 @@ namespace Geotagger_V2
             }
         }
 
-        public static double updateProgessValue
+        public double updateProgessValue
         {
             get
             {
@@ -187,7 +172,7 @@ namespace Geotagger_V2
             }
         }
 
-        public static string updateProgessMessage
+        public string updateProgessMessage
         {
             get
             {
@@ -200,3 +185,4 @@ namespace Geotagger_V2
         }
     }
 }
+

@@ -2,17 +2,12 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Threading;
-using Amazon.S3;
-using Amazon.S3.Model;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Geotagger_V2
 {
@@ -32,16 +27,13 @@ namespace Geotagger_V2
         private bool timer = false;
         private int startCount = 0;
         private bool writeMode; //write or read mode
-        private static IAmazonS3 s3Client;
-        private static ConcurrentQueue<string> fileQueue;
-        private static int uploadSum = 0;
-        private static BlockingCollection<string> errorQueue;
+        private bool uploading = false; //write or read mode
 
         public MainWindow()
         {
             InitializeComponent();
-            ProgressBar1.Visibility = Visibility.Hidden;
-            ProgressText.Visibility = Visibility.Hidden;
+            //ProgressBar1.Visibility = Visibility.Hidden;
+            //ProgressText.Visibility = Visibility.Hidden;
             ProgressBar2.Visibility = Visibility.Hidden;
             ProgressText2.Visibility = Visibility.Hidden;
             writeMode = true;
@@ -113,7 +105,7 @@ namespace Geotagger_V2
         private async void GeotagRead_Click(object sender, RoutedEventArgs e)
         {
             reader = GTReader.Instance();
-            startTimers(reader);
+            startTimers();
             BrowseInputRead.IsEnabled = false;
             BrowseOutputRead.IsEnabled = false;
             GeotagRead.IsEnabled = false;
@@ -154,11 +146,20 @@ namespace Geotagger_V2
         }
 
 
-        private void startTimers(object caller)
+        private void startTimers()
         {
             dispatcherTimer = new DispatcherTimer();
             dispatcherTimer.Tick += new EventHandler(DispatcherTimer_Tick);
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 1);
+            dispatcherTimer.Start();
+            Timer();
+        }
+
+        private void startTimers(int milliseconds)
+        {
+            dispatcherTimer = new DispatcherTimer();
+            dispatcherTimer.Tick += new EventHandler(DispatcherTimer_Tick);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, milliseconds);
             dispatcherTimer.Start();
             Timer();
         }
@@ -172,7 +173,7 @@ namespace Geotagger_V2
         {
             manager = GTWriter.Instance(50);
             manager.Initialise();
-            startTimers(manager);
+            startTimers();
             BrowseDB.IsEnabled = false;
             BrowseInput.IsEnabled = false;
             BrowseOutput.IsEnabled = false;
@@ -189,43 +190,42 @@ namespace Geotagger_V2
                 progressIndeterminate(false);
                 TaskStatus result = manager.readDatabase(mDBPath, "").Result;
                 Console.WriteLine(result);
-                
-                    if (result == TaskStatus.RanToCompletion)
+                if (result == TaskStatus.RanToCompletion)
+                {
+                    if (manager.updateDuplicateCount == 0)
                     {
-                        if (manager.updateDuplicateCount == 0)
+                        TaskStatus consumerStatus = manager.writeGeotag(mOutputPath).Result;
+                        if (consumerStatus == TaskStatus.RanToCompletion)
                         {
-                            TaskStatus consumerStatus = manager.writeGeotag(mOutputPath).Result;
-                            if (consumerStatus == TaskStatus.RanToCompletion)
+                            Dispatcher.Invoke((Action)(() =>
                             {
-                                Dispatcher.Invoke((Action)(() =>
-                                {
-                                    refreshUI();
-                                }));
-                            }
-                            else
-                            {
-                                Console.WriteLine(consumerStatus);
-                            }
+                                refreshUI();
+                            }));
                         }
                         else
                         {
-                            MessageBoxResult msgResult = System.Windows.MessageBox.Show("Duplicates detected in the record database",
-                                              "Operation will be cancelled",
-                                              MessageBoxButton.OK,
-                                              MessageBoxImage.Error);
-                            source.Cancel();
-
-                        }
-                        if (token.IsCancellationRequested)
-                        {
-                            timer = false;
-                            token.ThrowIfCancellationRequested();
+                            Console.WriteLine(consumerStatus);
                         }
                     }
                     else
                     {
-                        Console.WriteLine(result);
-                    }  
+                        MessageBoxResult msgResult = System.Windows.MessageBox.Show("Duplicates detected in the record database",
+                                            "Operation will be cancelled",
+                                            MessageBoxButton.OK,
+                                            MessageBoxImage.Error);
+                        source.Cancel();
+
+                    }
+                    if (token.IsCancellationRequested)
+                    {
+                        timer = false;
+                        token.ThrowIfCancellationRequested();
+                    }
+                }
+                else
+                {
+                    Console.WriteLine(result);
+                }  
             }, token);
         
             try
@@ -259,40 +259,58 @@ namespace Geotagger_V2
         {
             if (writeMode)
             {
-                int geotagCount = manager.updateGeoTagCount;
-                int count = geotagCount - startCount;
-                SpeedLabel.Content = "Items/sec: " + count;
-                startCount = geotagCount;
-                refreshUI();
-            } else
+                if (uploading)
+                {
+                    refreshUI();
+                } else
+                {
+                    int geotagCount = manager.updateGeoTagCount;
+                    int count = geotagCount - startCount;
+                    SpeedLabel.Content = "Items/sec: " + count;
+                    startCount = geotagCount;
+                    refreshUI();
+                }
+            }
+                    
+            else
             {
                 Console.WriteLine("reader");
                 refreshUI();
             }
+                     
         }
 
         private void refreshUI()
         {
-            if (writeMode)
+            if (uploading)
             {
-                ProgressLabel.Content = manager.updateProgessMessage;
-                ProgressBar1.Value = manager.updateProgessValue;
-                PhotoCountLabel.Content = "Processing photo: " + (manager.updatePhotoCount - manager.updatePhotoQueueCount) + " of " + manager.updatePhotoCount;
-                RecordCountLabel.Content = "Records to process: " + manager.updateRecordCount;
-                GeotagLabel.Content = "Geotag Count: " + manager.updateGeoTagCount;
-                RecordDictLabel.Content = "Record Dictionary: " + manager.updateRecordDictCount;
-                PhotoQueueLabel.Content = "Photo Queue: " + manager.updatePhotoQueueCount;
-                BitmapQueueLabel.Content = "Bitmap Queue: " + manager.updateBitmapQueueCount;
-                NoRecordLabel.Content = "Photos with no record: " + manager.updateNoRecordCount;
-                DuplicateLabel.Content = "Duplicate Records: " + manager.updateDuplicateCount;
-                PhotoErrorLabel.Content = "Photo Name Errors: " + manager.updatePhotoNameError;
+                ProgressBar1.Value = AmazonUploader.updateProgessValue;
+                ProgressLabel.Content = AmazonUploader.updateProgessMessage;
             } else
             {
-                ProgressLabel2.Content = reader.updateProgessMessage;
-                ProgressBar2.Value = reader.updateProgessValue;
-                PhotoCountLabelReader.Content = "Processing photo: " + (reader.updateRecordQueueCount) + " of " + reader.updatePhotoCount;
-                ErrorLabelReader.Content = "Errors: " + reader.updateErrorCount;
+                if (writeMode)
+                {
+                    ProgressLabel.Content = manager.updateProgessMessage;
+                    ProgressBar1.Value = manager.updateProgessValue;
+                    PhotoCountLabel.Content = "Processing photo: " + (manager.updatePhotoCount - manager.updatePhotoQueueCount) + " of " + manager.updatePhotoCount;
+                    RecordCountLabel.Content = "Records to process: " + manager.updateRecordCount;
+                    GeotagLabel.Content = "Geotag Count: " + manager.updateGeoTagCount;
+                    RecordDictLabel.Content = "Record Dictionary: " + manager.updateRecordDictCount;
+                    PhotoQueueLabel.Content = "Photo Queue: " + manager.updatePhotoQueueCount;
+                    BitmapQueueLabel.Content = "Bitmap Queue: " + manager.updateBitmapQueueCount;
+                    NoRecordLabel.Content = "Photos with no record: " + manager.updateNoRecordCount;
+                    DuplicateLabel.Content = "Duplicate Records: " + manager.updateDuplicateCount;
+                    PhotoErrorLabel.Content = "Photo Name Errors: " + manager.updatePhotoNameError;
+                }
+                else
+                {
+                    ProgressLabel2.Content = reader.updateProgessMessage;
+                    ProgressBar2.Value = reader.updateProgessValue;
+                    PhotoCountLabelReader.Content = "Processing photo: " + (reader.updateRecordQueueCount) + " of " + reader.updatePhotoCount;
+                    ErrorLabelReader.Content = "Errors: " + reader.updateErrorCount;
+                }
             }
+            
         }
 
         /// <summary>
@@ -361,8 +379,7 @@ namespace Geotagger_V2
                     ProgressBar1.Visibility = Visibility.Visible;
                     ProgressText.Visibility = Visibility.Visible;
                     ProgressLabel.Visibility = Visibility.Visible;
-                } else
-                {
+                } else {
                 {
                     ProgressBar2.Visibility = Visibility.Visible;
                     ProgressText2.Visibility = Visibility.Visible;
@@ -424,18 +441,45 @@ namespace Geotagger_V2
 
         private void Upload_Click(object sender, RoutedEventArgs e)
         {
+            uploading = true;
             string targetDirectory = @"C:\Users\matt\Documents\Onsite\temp\2020_12\"; //local folder
             string bucket = "akl-south-urban";
             string prefix = "test/1";
+            startTimers(10);
+            Amazon amazon = new Amazon(Environment.ProcessorCount);
             Task upload = Task.Factory.StartNew(() =>
             {
-               Console.WriteLine("Processor Count:" + Environment.ProcessorCount);
-               AmazonUploader.Intialise(Environment.ProcessorCount);
-               AmazonUploader.Upload(targetDirectory, bucket, prefix);
+                showProgressBar();
+                Console.WriteLine("Processor Count:" + Environment.ProcessorCount);
+                AmazonUploader.Intialise(Environment.ProcessorCount);
+                Task t = Task.Factory.StartNew(() => 
+                    AmazonUploader.Upload(targetDirectory, bucket, prefix)
+                );
+                Task.WhenAll(t);
+                try
+                {
+                    t.Wait();
+                    uploading = false;
+                    dispatcherTimer.Stop();
+                    timer = false;
+                }
+                catch { }
 
+                //uploading = false;
+                //dispatcherTimer.Stop();
+                //timer = false;
             });
-            upload.Wait();
-            Console.WriteLine("finish");
-           }
+            //Task t = Task.WhenAll(upload);
+            //try
+            //{
+            //    t.Wait();
+            //    //uploading = false;
+            //    //dispatcherTimer.Stop();
+            //    //timer = false;
+            //}
+            //catch { }
+
+
+        }
     }
 }
