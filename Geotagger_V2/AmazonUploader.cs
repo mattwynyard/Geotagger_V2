@@ -18,12 +18,12 @@ namespace Geotagger_V2
         private static IAmazonS3 s3Client ;
         private static ConcurrentQueue<string> fileQueue;
         public static int uploadSum = 0;
-        private static BlockingCollection<string> errorQueue;
+        public static BlockingCollection<string> errorQueue;
         private static Semaphore _pool;
         private static int semaphoreCount;
         private static string _progressMessage;
         public static double _progressValue;
-        private static int files;
+        public static int files;
 
         public static void Intialise(int count)
         {
@@ -70,7 +70,7 @@ namespace Geotagger_V2
                     files = fileQueue.Count;
                     var watch = Stopwatch.StartNew();
                     _pool.Release(semaphoreCount);
-                    Interlocked.Exchange(ref _progressMessage, "Uploading..... " + uploadSum + " of " + files + " files");
+                    Interlocked.Exchange(ref _progressMessage, "Uploading..... ");
                     try
                     {
                         foreach (Task task in tasks)
@@ -86,11 +86,13 @@ namespace Geotagger_V2
                     try
                     {
                         t.Wait();
+                        Interlocked.Exchange(ref _progressMessage, "Finished..... ");
                         watch.Stop();
                         Thread.Sleep(1000);
                         Console.WriteLine($"Time Taken: { watch.ElapsedMilliseconds} ms.");
                         Console.WriteLine($"Files uploaded: {uploadSum}");
-                        Console.WriteLine($"Errors: {errorQueue.Count}");                  
+                        Console.WriteLine($"Errors: {errorQueue.Count}");
+                        
                     }
                     catch { }
                     
@@ -130,7 +132,7 @@ namespace Geotagger_V2
                         PutObjectResponse response = await s3Client.PutObjectAsync(putRequest);
                     }
                     Interlocked.Add(ref uploadSum, 1);
-                    Interlocked.Exchange(ref _progressMessage, "Uploading..... " + uploadSum + " of " + files + " files");
+                    //Interlocked.Exchange(ref _progressMessage, "Uploading..... " + uploadSum + " of " + files + " files");
                     double newValue = ((double)uploadSum / (double)files) * 100;
                     Interlocked.Exchange(ref _progressValue, newValue);
                 }

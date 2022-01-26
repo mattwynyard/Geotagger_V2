@@ -299,6 +299,9 @@ namespace Geotagger_V2
                 {
                     prevUploadCount = AmazonUploader.uploadSum;
                     SpeedLabel.Content = "Items/sec: " + uploaded;
+                    UploadErrorLabel.Content = "Photo Name Errors: " + AmazonUploader.errorQueue.Count;
+                    FilesToUploadLabel.Content = "Files to Upload: " + AmazonUploader.files;
+                    UploadCountLabel.Content = "Uploading File: " + AmazonUploader.uploadSum + " of " + AmazonUploader.files;
                 }
                 ProgressBar1.Value = AmazonUploader.updateProgessValue;
                 ProgressLabel.Content = AmazonUploader.updateProgessMessage;
@@ -322,7 +325,7 @@ namespace Geotagger_V2
                 {
                     ProgressLabel2.Content = reader.updateProgessMessage;
                     ProgressBar2.Value = reader.updateProgessValue;
-                    PhotoCountLabelReader.Content = "Processing photo: " + (reader.updateRecordQueueCount) + " of " + reader.updatePhotoCount;
+                    PhotoCountLabelReader.Content = "Processing photo: " + reader.updateRecordQueueCount + " of " + reader.updatePhotoCount;
                     ErrorLabelReader.Content = "Errors: " + reader.updateErrorCount;
                 }
             }
