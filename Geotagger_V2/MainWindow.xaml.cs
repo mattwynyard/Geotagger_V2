@@ -476,8 +476,8 @@ namespace Geotagger_V2
             string targetDirectory = mOutputPath;
             if (directoryHasFiles(mOutputPath))
             {
-                string bucket = "akl-south-urban";
-                string prefix = "test/1";
+                string bucket = "onsiteasu";
+                string prefix = "2022/01";
                 startTimers(500);
                 Amazon amazon = new Amazon(Environment.ProcessorCount);
                 Task upload = Task.Factory.StartNew(() =>
