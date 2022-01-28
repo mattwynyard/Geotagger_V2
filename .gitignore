@@ -71,6 +71,7 @@ secret.config
 *.pidb
 *.svclog
 *.scc
+*.xlsx
 
 # Amazon
 Geotagger_V2/App.config

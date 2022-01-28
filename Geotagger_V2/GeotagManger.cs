@@ -12,7 +12,6 @@ namespace Geotagger_V2
 {
     public abstract class GeotagManger
     {
-
         protected string _progressMessage;
         protected double _progressValue;
         protected int _photoCount;
@@ -34,7 +33,6 @@ namespace Geotagger_V2
             {
                 if (zip)
                 {
-                    //photoDict = new ConcurrentDictionary<string, string>(); //
                     string[] files = Directory.GetFiles(path, "*.zip", SearchOption.AllDirectories);
                     foreach (var file in files)
                     {
