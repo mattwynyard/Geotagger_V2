@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Geotagger_V2
@@ -38,6 +39,18 @@ namespace Geotagger_V2
                     return "AB";
                 default:
                     return "";
+            }
+        }
+
+        public static bool directoryHasFiles(string path)
+        {
+            if (path != null)
+            {
+                return Directory.EnumerateFileSystemEntries(path).Any();
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -116,9 +129,7 @@ namespace Geotagger_V2
             {
                 Console.WriteLine(ex.StackTrace);
                 return new DateTime();
-            }
-
-            
+            }   
         }
 
         public static double byteToDecimal(byte[] b) //type 5
