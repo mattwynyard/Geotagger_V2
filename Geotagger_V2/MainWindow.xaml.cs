@@ -498,7 +498,6 @@ namespace Geotagger_V2
         private void Upload_Click(object sender, RoutedEventArgs e)
         {
             uploading = true;
-            //string targetDirectory = @"C:\Users\matt\Documents\Onsite\temp\20000\"; //local folder
             string targetDirectory = mOutputPath;
             if (Utilities.directoryHasFiles(mOutputPath))
             {
@@ -512,8 +511,6 @@ namespace Geotagger_V2
                     bucket = queryDB(bucketQuery, mDBPath);
                     prefix = queryDB(prefixQuery, mDBPath);
                 }
-                //string bucket = "onsiteasu";
-                //string prefix = "2022/01";
                 startTimers(500);
                 Amazon amazon = new Amazon(Environment.ProcessorCount);
                 Task upload = Task.Factory.StartNew(() =>
@@ -543,6 +540,13 @@ namespace Geotagger_V2
             } else
             {
                 //alert no files
+                string message = "The selected folder contains no files. Please re-select folder";
+                string caption = "No files dectected";
+                MessageBoxButtons buttons = MessageBoxButtons.OK;
+                DialogResult result;
+
+                // Displays the MessageBox.
+                result = System.Windows.Forms.MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
             }
             
             
