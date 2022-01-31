@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.OleDb;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -108,9 +109,10 @@ namespace Geotagger_V2
         }
 
 
+
         private async void GeotagRead_Click(object sender, RoutedEventArgs e)
         {
-            if (directoryHasFiles(mInputPath)) {
+            if (Utilities.directoryHasFiles(mInputPath)) {
                 reader = GTReader.Instance();
                 startTimers();
                 BrowseInputRead.IsEnabled = false;
@@ -180,7 +182,7 @@ namespace Geotagger_V2
         /// <param name="e">click event</param>
         private async void Geotag_Click(object sender, RoutedEventArgs e)
         {
-            if (directoryHasFiles(mInputPath) || mInputPath != null)
+            if (Utilities.directoryHasFiles(mInputPath) || mInputPath != null)
             {
                 manager = GTWriter.Instance(50);
                 manager.Initialise();
@@ -458,26 +460,60 @@ namespace Geotagger_V2
             mOutputPath = txtOutputPathRead.Text;
         }
 
-        public bool directoryHasFiles(string path)
+        private string queryDB(string query, string dbPath)
         {
-            if (path != null)
+            string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
+               "Microsoft.Jet.OLEDB.4.0", dbPath, 5);
+            OleDbConnection connection = new OleDbConnection(connectionString);
+            connection.Open();
+            OleDbCommand command = new OleDbCommand(query, connection);
+            object[] row = null;
+            using (OleDbDataReader reader = command.ExecuteReader())
             {
-                return Directory.EnumerateFileSystemEntries(path).Any();
-            } else
-            {
-                return false;
+                
+                while (reader.Read())
+                {
+                    row = new object[reader.FieldCount];
+                    reader.GetValues(row);
+                    
+                }
+                //reader.Close();
+                command.Dispose();
             }
+            connection.Close();
+            string result = null;
+            try
+            {
+                result = (string)row[0];
+            } catch (Exception e)
+            {
+                Console.WriteLine($"An exception occured: {e.Message}");
+            }
+
+            return result;
         }
+
+
 
         private void Upload_Click(object sender, RoutedEventArgs e)
         {
             uploading = true;
             //string targetDirectory = @"C:\Users\matt\Documents\Onsite\temp\20000\"; //local folder
             string targetDirectory = mOutputPath;
-            if (directoryHasFiles(mOutputPath))
+            if (Utilities.directoryHasFiles(mOutputPath))
             {
-                string bucket = "onsiteasu";
-                string prefix = "2022/01";
+                //connect db
+                string bucketQuery = "SELECT Config.bucket FROM Config;";
+                string prefixQuery = "SELECT Config.prefix FROM Config;";
+                string bucket = null;
+                string prefix = null;
+                if (mDBPath != null)
+                {
+                    bucket = queryDB(bucketQuery, mDBPath);
+                    prefix = queryDB(prefixQuery, mDBPath);
+                }
+                //string bucket = "onsiteasu";
+                //string prefix = "2022/01";
                 startTimers(500);
                 Amazon amazon = new Amazon(Environment.ProcessorCount);
                 Task upload = Task.Factory.StartNew(() =>
@@ -504,6 +540,9 @@ namespace Geotagger_V2
                     }
                     catch { }
                 });
+            } else
+            {
+                //alert no files
             }
             
             

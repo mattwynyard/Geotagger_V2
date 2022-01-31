@@ -132,7 +132,6 @@ namespace Geotagger_V2
                         PutObjectResponse response = await s3Client.PutObjectAsync(putRequest);
                     }
                     Interlocked.Add(ref uploadSum, 1);
-                    //Interlocked.Exchange(ref _progressMessage, "Uploading..... " + uploadSum + " of " + files + " files");
                     double newValue = ((double)uploadSum / (double)files) * 100;
                     Interlocked.Exchange(ref _progressValue, newValue);
                 }
@@ -154,6 +153,7 @@ namespace Geotagger_V2
                 catch (Exception e)
                 {
                     errorQueue.Add(path);
+                    fileQueue.Enqueue(path); //retry file upload
                     Console.WriteLine(
                         "Unknown encountered on server. Message:'{0}' when writing an object"
                         , e.Message);
