@@ -104,8 +104,6 @@ namespace Geotagger_V2
                     string caption = "Amazon bucket error";
                     MessageBoxButtons buttons = MessageBoxButtons.OK;
                     DialogResult result;
-
-                    // Displays the MessageBox.
                     result = MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
                 }
             }

@@ -62,8 +62,20 @@ namespace Geotagger_V2
                     string prefixQuery = "SELECT Config.prefix FROM Config;";
                     if (mDBPath != null)
                     {
-                        bucket = queryDB(bucketQuery, mDBPath);
-                        prefix = queryDB(prefixQuery, mDBPath);
+                        string[] bucketArr = queryDB(bucketQuery, mDBPath);
+                        string[] prefixArr = queryDB(prefixQuery, mDBPath);
+                        if (bucketArr[0] != null || prefixArr[0] != null)
+                        {
+                            string caption = "Error";
+                            MessageBoxButtons buttons = MessageBoxButtons.OK;
+                            System.Windows.Forms.MessageBox.Show(bucketArr[0], caption, buttons, MessageBoxIcon.Error);
+                            bucketLabel.Content = $"Bucket: Error";
+                        } else
+                        {
+                            bucket = bucketArr[1];
+                            prefix = prefixArr[1];
+                            bucketLabel.Content = $"Bucket: {bucket}/{prefix}";
+                        }  
                     }
                 }
                 else
@@ -116,9 +128,6 @@ namespace Geotagger_V2
                 }             
             }
         }
-
-
-
         private async void GeotagRead_Click(object sender, RoutedEventArgs e)
         {
             if (Utilities.directoryHasFiles(mInputPath)) {
@@ -469,7 +478,7 @@ namespace Geotagger_V2
             mOutputPath = txtOutputPathRead.Text;
         }
 
-        private string queryDB(string query, string dbPath)
+        private string[] queryDB(string query, string dbPath)
         {
             string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
                "Microsoft.Jet.OLEDB.4.0", dbPath, 5);
@@ -488,23 +497,15 @@ namespace Geotagger_V2
                     }
                     command.Dispose();
                 }
+                connection.Close();
+                string result = (string)row[0]; ;
+                return new string[] {null, result};
+
             } catch (Exception ex)
             {
-                string caption = "Error";
-                MessageBoxButtons buttons = MessageBoxButtons.OK;
-                System.Windows.Forms.MessageBox.Show(ex.Message, caption, buttons);
-            }
-            
-            connection.Close();
-            string result = null;
-            try
-            {
-                result = (string)row[0];
-            } catch (Exception e)
-            {
-                Console.WriteLine($"An exception occured: {e.Message}");
-            }
-            return result;
+                connection.Close();
+                return new string[] { ex.Message, null }; ;
+            }         
         }
 
         private void Upload_Click(object sender, RoutedEventArgs e)
