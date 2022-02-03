@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Windows.Threading;
 
 namespace Geotagger_V2
@@ -99,12 +100,22 @@ namespace Geotagger_V2
                 }
                 else
                 {
-                    //alert no bucket
+                    string message = "Could not find the selected amazon bucket - check amazon path";
+                    string caption = "Amazon bucket error";
+                    MessageBoxButtons buttons = MessageBoxButtons.OK;
+                    DialogResult result;
+
+                    // Displays the MessageBox.
+                    result = MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
                 }
             }
             else
             {
-                //alert no amazon connection
+                string message = "Could not connect to amazon - check login credentials";
+                string caption = "Amazon connection error";
+                MessageBoxButtons buttons = MessageBoxButtons.OK;
+                DialogResult result;
+                result = MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
             }
         }
         private static async void UploadFile(string bucketName)
@@ -114,9 +125,7 @@ namespace Geotagger_V2
             string path;
             while (fileQueue.TryDequeue(out path))
             {
-                
-                string fileName = Path.GetFileName(path);
-                
+                string fileName = Path.GetFileName(path);           
                 try
                 {
                     PutObjectRequest putRequest = new PutObjectRequest

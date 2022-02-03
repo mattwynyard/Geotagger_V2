@@ -383,22 +383,22 @@ namespace Geotagger_V2
             });
         }
 
-        private void hideProgressBar()
-        {
-            Dispatcher.Invoke((Action)(() => {
-                if (writeMode)
-                {
-                    ProgressBar1.Visibility = Visibility.Hidden;
-                    ProgressText.Visibility = Visibility.Hidden;
-                    ProgressLabel.Visibility = Visibility.Hidden;
-                } else
-                {
-                    ProgressBar2.Visibility = Visibility.Hidden;
-                    ProgressText2.Visibility = Visibility.Hidden;
-                    ProgressLabel2.Visibility = Visibility.Hidden;
-                }
-            }));
-        }
+        //private void hideProgressBar()
+        //{
+        //    Dispatcher.Invoke((Action)(() => {
+        //        if (writeMode)
+        //        {
+        //            ProgressBar1.Visibility = Visibility.Hidden;
+        //            ProgressText.Visibility = Visibility.Hidden;
+        //            ProgressLabel.Visibility = Visibility.Hidden;
+        //        } else
+        //        {
+        //            ProgressBar2.Visibility = Visibility.Hidden;
+        //            ProgressText2.Visibility = Visibility.Hidden;
+        //            ProgressLabel2.Visibility = Visibility.Hidden;
+        //        }
+        //    }));
+        //}
 
 
         private void showProgressBar()
@@ -510,19 +510,9 @@ namespace Geotagger_V2
         private void Upload_Click(object sender, RoutedEventArgs e)
         {
             uploading = true;
-            //string targetDirectory = @"C:\Users\matt\Documents\Onsite\temp\20000\"; //local folder
             string targetDirectory = mOutputPath;
             if (Utilities.directoryHasFiles(mOutputPath))
             {
-                //connect db
-                //string bucketQuery = "SELECT Config.bucket FROM Config;";
-                //string prefixQuery = "SELECT Config.prefix FROM Config;";
-               
-                //if (mDBPath != null)
-                //{
-                //    bucket = queryDB(bucketQuery, mDBPath);
-                //    prefix = queryDB(prefixQuery, mDBPath);
-                //}
                 startTimers(500);
                 Amazon amazon = new Amazon(Environment.ProcessorCount);
                 Task upload = Task.Factory.StartNew(() =>
@@ -552,6 +542,13 @@ namespace Geotagger_V2
             } else
             {
                 //alert no files
+                string message = "The selected folder contains no files. Please re-select folder";
+                string caption = "No files dectected";
+                MessageBoxButtons buttons = MessageBoxButtons.OK;
+                DialogResult result;
+
+                // Displays the MessageBox.
+                result = System.Windows.Forms.MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
             }
             
             

@@ -406,7 +406,7 @@ namespace Geotagger_V2
                 PropertyItem propItemPDop = RecordUtil.getEXIFNumber(threadInfo.propItemPDop, "pdop", 10);
                 PropertyItem propItemSat = RecordUtil.getEXIFInt(threadInfo.propItemSat, threadInfo.Record.Satellites);
                 PropertyItem propItemDateTime = RecordUtil.getEXIFDateTime(threadInfo.propItemDateTime);
-
+                
                 try
                 {
                     //do image correction
@@ -419,51 +419,17 @@ namespace Geotagger_V2
                     emguImage = CorrectionUtil.GammaCorrection(emguImage);
                     Image image = CorrectionUtil.ImageFromEMGUImage(emguImage);
                     emguImage.Dispose();
-                    if (propItemLat != null)
-                    {
-                        image.SetPropertyItem(propItemLat);
-                    }
-                    if (propItemLon != null)
-                    {
-                        image.SetPropertyItem(propItemLon);
-                    }
-                    if (propItemLatRef != null)
-                    {
-                        image.SetPropertyItem(propItemLatRef);
-                    }
-                    if (propItemLonRef != null)
-                    {
-                        image.SetPropertyItem(propItemLonRef);
-                    }
-                    if (propItemAlt != null)
-                    {
-                        image.SetPropertyItem(propItemAlt);
-                    }
-                    if (propItemAltRef != null)
-                    {
-                        image.SetPropertyItem(propItemAltRef);
-                    }
-                    if (propItemDir != null)
-                    {
-                        image.SetPropertyItem(propItemDir);
-                    }
-                    if (propItemVel != null)
-                    {
-                        image.SetPropertyItem(propItemVel);
-                    }
-                    if (propItemPDop != null)
-                    {
-                        image.SetPropertyItem(propItemPDop);
-                    }
-                    if (propItemSat != null)
-                    {
-                        image.SetPropertyItem(propItemSat);
-                    }
-                    if (propItemDateTime != null)
-                    {
-                        image.SetPropertyItem(propItemDateTime);
-                    }
-                    
+                    image.SetPropertyItem(propItemLat);
+                    image.SetPropertyItem(propItemLon);
+                    image.SetPropertyItem(propItemLatRef);
+                    image.SetPropertyItem(propItemLonRef);
+                    image.SetPropertyItem(propItemAlt);
+                    image.SetPropertyItem(propItemAltRef);
+                    image.SetPropertyItem(propItemDir);
+                    image.SetPropertyItem(propItemVel);
+                    image.SetPropertyItem(propItemPDop);
+                    image.SetPropertyItem(propItemSat);
+                    image.SetPropertyItem(propItemDateTime);
                     await saveFile(image, threadInfo.OutPath);
                     Interlocked.Increment(ref _geotagCount);
                     Interlocked.Exchange(ref _progressBitmapQueueCount, bitmapQueue.Count);
@@ -475,7 +441,6 @@ namespace Geotagger_V2
                     string s = ex.StackTrace;
                 }
                 
-
             }
             catch (Exception ex)
             {
