@@ -290,8 +290,8 @@ namespace Geotagger_V2
                     r.Side = Convert.ToString(row[19]);
                     r.Road = Convert.ToInt32(row[20]);
                     r.Carriageway = Convert.ToInt32(row[21]);
-                    r.ERP = Convert.ToInt32(row[22]);
-                    r.FaultID = Convert.ToInt32(row[23]);     
+                    //r.ERP = Convert.ToInt32(row[22]);
+                    //r.FaultID = Convert.ToInt32(row[23]);     
                 }
                 catch (Exception e)
                 {
