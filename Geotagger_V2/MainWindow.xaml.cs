@@ -31,6 +31,8 @@ namespace Geotagger_V2
         private bool writeMode; //write or read mode
         private bool uploading = false; //write or read mode
         private int prevUploadCount = 0;
+        private string bucket;
+        private string prefix;
 
         public MainWindow()
         {
@@ -56,6 +58,13 @@ namespace Geotagger_V2
                 if (mDBPath != "")
                 {
                     txtBoxDB.Text = mDBPath = openFileDialog.FileName;
+                    string bucketQuery = "SELECT Config.bucket FROM Config;";
+                    string prefixQuery = "SELECT Config.prefix FROM Config;";
+                    if (mDBPath != null)
+                    {
+                        bucket = queryDB(bucketQuery, mDBPath);
+                        prefix = queryDB(prefixQuery, mDBPath);
+                    }
                 }
                 else
                 {
@@ -468,18 +477,24 @@ namespace Geotagger_V2
             connection.Open();
             OleDbCommand command = new OleDbCommand(query, connection);
             object[] row = null;
-            using (OleDbDataReader reader = command.ExecuteReader())
+            try
             {
-                
-                while (reader.Read())
+                using (OleDbDataReader reader = command.ExecuteReader())
                 {
-                    row = new object[reader.FieldCount];
-                    reader.GetValues(row);
-                    
+                    while (reader.Read())
+                    {
+                        row = new object[reader.FieldCount];
+                        reader.GetValues(row);
+                    }
+                    command.Dispose();
                 }
-                //reader.Close();
-                command.Dispose();
+            } catch (Exception ex)
+            {
+                string caption = "Error";
+                MessageBoxButtons buttons = MessageBoxButtons.OK;
+                System.Windows.Forms.MessageBox.Show(ex.Message, caption, buttons);
             }
+            
             connection.Close();
             string result = null;
             try
@@ -489,11 +504,8 @@ namespace Geotagger_V2
             {
                 Console.WriteLine($"An exception occured: {e.Message}");
             }
-
             return result;
         }
-
-
 
         private void Upload_Click(object sender, RoutedEventArgs e)
         {
@@ -503,17 +515,14 @@ namespace Geotagger_V2
             if (Utilities.directoryHasFiles(mOutputPath))
             {
                 //connect db
-                string bucketQuery = "SELECT Config.bucket FROM Config;";
-                string prefixQuery = "SELECT Config.prefix FROM Config;";
-                string bucket = null;
-                string prefix = null;
-                if (mDBPath != null)
-                {
-                    bucket = queryDB(bucketQuery, mDBPath);
-                    prefix = queryDB(prefixQuery, mDBPath);
-                }
-                //string bucket = "onsiteasu";
-                //string prefix = "2022/01";
+                //string bucketQuery = "SELECT Config.bucket FROM Config;";
+                //string prefixQuery = "SELECT Config.prefix FROM Config;";
+               
+                //if (mDBPath != null)
+                //{
+                //    bucket = queryDB(bucketQuery, mDBPath);
+                //    prefix = queryDB(prefixQuery, mDBPath);
+                //}
                 startTimers(500);
                 Amazon amazon = new Amazon(Environment.ProcessorCount);
                 Task upload = Task.Factory.StartNew(() =>
