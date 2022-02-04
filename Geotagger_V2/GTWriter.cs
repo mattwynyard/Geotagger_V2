@@ -29,6 +29,7 @@ namespace Geotagger_V2
         private BlockingCollection<object[]> bitmapQueue;
         private static ManualResetEvent mre = new ManualResetEvent(false);
         private static GTWriter _instance;
+        private FileSystemWatcher watcher;
 
         protected GTWriter(int sizeBitmapQueue = 50) 
         {
@@ -74,6 +75,7 @@ namespace Geotagger_V2
             _photoCount = 0;
             _photosNoRecordCount = 0;
             _photoNameError = 0;
+
 
         }
 

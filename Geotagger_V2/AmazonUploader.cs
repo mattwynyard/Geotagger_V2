@@ -130,12 +130,14 @@ namespace Geotagger_V2
                     {
                         BucketName = bucketName,
                         Key = fileName,
+                        CannedACL = S3CannedACL.PublicRead,
                     };
                     string base64 = checkMD5(path);
                     using (FileStream stream = new FileStream(path, FileMode.Open))
                     {
                         putRequest.MD5Digest = base64;
                         putRequest.InputStream = stream;
+                        putRequest.ContentType = "image/jpg";
                         PutObjectResponse response = await s3Client.PutObjectAsync(putRequest);
                     }
                     Interlocked.Add(ref uploadSum, 1);
