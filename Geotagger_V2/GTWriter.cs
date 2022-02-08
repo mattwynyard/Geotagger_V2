@@ -29,6 +29,7 @@ namespace Geotagger_V2
         private BlockingCollection<object[]> bitmapQueue;
         private static ManualResetEvent mre = new ManualResetEvent(false);
         private static GTWriter _instance;
+        private FileSystemWatcher watcher;
 
         protected GTWriter(int sizeBitmapQueue = 50) 
         {
@@ -74,6 +75,7 @@ namespace Geotagger_V2
             _photoCount = 0;
             _photosNoRecordCount = 0;
             _photoNameError = 0;
+
 
         }
 
@@ -287,11 +289,11 @@ namespace Geotagger_V2
                     r.Inspector = Convert.ToString(row[10]);
                     r.TimeStamp = Convert.ToDateTime(row[12]);
                     r.GeoMark = Convert.ToBoolean(row[13]);
-                    r.Side = Convert.ToString(row[19]);
-                    r.Road = Convert.ToInt32(row[20]);
-                    r.Carriageway = Convert.ToInt32(row[21]);
-                    //r.ERP = Convert.ToInt32(row[22]);
-                    //r.FaultID = Convert.ToInt32(row[23]);     
+                    r.Side = Convert.ToString(row[17]);
+                    r.Road = Convert.ToInt32(row[18]);
+                    r.Carriageway = Convert.ToInt32(row[19]);
+                    r.ERP = Convert.ToInt32(row[20]);
+                    r.FaultID = Convert.ToInt32(row[21]);     
                 }
                 catch (Exception e)
                 {
@@ -452,14 +454,11 @@ namespace Geotagger_V2
 
         private async Task saveFile(Image image, string path)
         {
-            Console.WriteLine("start");
             await Task.Run(() =>
             {
                 try
                 {
                     image.Save(path);
-                    Console.WriteLine("saved");
-
                 }
                 catch (Exception ex)
                 {
@@ -467,7 +466,6 @@ namespace Geotagger_V2
                     Console.WriteLine(err);
                 }
             });
-            Console.WriteLine("end");
         }
 
         [DllImport("mpr.dll", CharSet = CharSet.Unicode, SetLastError = true)]
