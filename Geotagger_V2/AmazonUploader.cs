@@ -49,63 +49,81 @@ namespace Geotagger_V2
             {
                 string[] filePaths = Directory.GetFiles(directory);
                 string amazonPath = bucket + "/" + prefix;
-                var listResponse = s3Client.ListObjectsV2(new ListObjectsV2Request
+                try
                 {
-                    BucketName = bucket,
-                    Prefix = prefix
-                });
-                if (listResponse.S3Objects.Count > 0) //test if folder exists => move
-                {
-                    List<Task> taskList = new List<Task>();
-                    foreach (string filePath in filePaths)
+                    var listResponse = s3Client.ListObjectsV2(new ListObjectsV2Request
                     {
-                        Interlocked.Exchange(ref _progressMessage, "Building queue");
-                        fileQueue.Enqueue(filePath);
-                    }
-                    for (int i = 0; i < semaphoreCount + 1; i++) //+ 1 thread that blocks t until all workers finish
+                        BucketName = bucket,
+                        Prefix = prefix
+                    });
+                    if (listResponse.S3Objects.Count > 0) //test if folder exists => move
                     {
-                        taskList.Add(new Task(() => UploadFile(amazonPath)));
-                    }
-                    Task[] tasks = taskList.ToArray();
-                    Console.WriteLine("Files: " + fileQueue.Count);
-                    files = fileQueue.Count;
-                    var watch = Stopwatch.StartNew();
-                    _pool.Release(semaphoreCount);
-                    Interlocked.Exchange(ref _progressMessage, "Uploading..... ");
-                    try
-                    {
-                        foreach (Task task in tasks)
+                        List<Task> taskList = new List<Task>();
+                        foreach (string filePath in filePaths)
                         {
-                            task.Start();
+                            Interlocked.Exchange(ref _progressMessage, "Building queue");
+                            fileQueue.Enqueue(filePath);
                         }
+                        for (int i = 0; i < semaphoreCount + 1; i++) //+ 1 thread that blocks t until all workers finish
+                        {
+                            taskList.Add(new Task(() => UploadFiles(amazonPath)));
+                        }
+                        Task[] tasks = taskList.ToArray();
+                        Console.WriteLine("Files: " + fileQueue.Count);
+                        files = fileQueue.Count;
+                        var watch = Stopwatch.StartNew();
+                        _pool.Release(semaphoreCount);
+                        Interlocked.Exchange(ref _progressMessage, "Uploading..... ");
+                        try
+                        {
+                            foreach (Task task in tasks)
+                            {
+                                task.Start();
+                            }
+                        }
+                        catch (AggregateException ex)
+                        {
+                            Console.WriteLine("An action has thrown an exception. THIS WAS UNEXPECTED.\n{0}", ex.InnerException.ToString());
+                        }
+                        Task t = Task.WhenAll(tasks);
+                        try
+                        {
+                            t.Wait();
+                            Interlocked.Exchange(ref _progressMessage, "Finished..... ");
+                            watch.Stop();
+                            Thread.Sleep(1000);
+                            Console.WriteLine($"Time Taken: { watch.ElapsedMilliseconds} ms.");
+                            Console.WriteLine($"Files uploaded: {uploadSum}");
+                            Console.WriteLine($"Errors: {errorQueue.Count}");
+
+                        }
+                        catch { }
+
                     }
-                    catch (AggregateException ex)
+                    else
                     {
-                        Console.WriteLine("An action has thrown an exception. THIS WAS UNEXPECTED.\n{0}", ex.InnerException.ToString());
+                        string message = $"Bucket does not exist - contact administrator";
+                        string caption = $"Bucket error";
+                        MessageBoxButtons buttons = MessageBoxButtons.OK;
+                        DialogResult cancel;
+                        cancel = MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
                     }
-                    Task t = Task.WhenAll(tasks);
-                    try
-                    {
-                        t.Wait();
-                        Interlocked.Exchange(ref _progressMessage, "Finished..... ");
-                        watch.Stop();
-                        Thread.Sleep(1000);
-                        Console.WriteLine($"Time Taken: { watch.ElapsedMilliseconds} ms.");
-                        Console.WriteLine($"Files uploaded: {uploadSum}");
-                        Console.WriteLine($"Errors: {errorQueue.Count}");
-                        
-                    }
-                    catch { }
-                    
-                }
-                else
+                } catch (AmazonS3Exception amazonS3Exception)
                 {
-                    string message = "Could not find the selected amazon bucket - check amazon path";
-                    string caption = "Amazon bucket error";
+                    string message = $"Could not connect to bucket - contact administrator {amazonS3Exception.Message}";
+                    string caption = $"{amazonS3Exception.ErrorCode}";
                     MessageBoxButtons buttons = MessageBoxButtons.OK;
-                    DialogResult result;
-                    result = MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
+                    DialogResult cancel;
+                    cancel = MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
+                } catch (Exception ex)
+                {
+                    string message = $"An unknow error occured - contact administrator {ex.Message}";
+                    string caption = $"{ex.Message}";
+                    MessageBoxButtons buttons = MessageBoxButtons.OK;
+                    DialogResult cancel;
+                    cancel = MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
                 }
+                
             }
             else
             {
@@ -116,14 +134,13 @@ namespace Geotagger_V2
                 result = MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
             }
         }
-        private static async void UploadFile(string bucketName)
+        private static async void UploadFiles(string bucketName)
         {
             _pool.WaitOne();
-            string result;
             string path;
             while (fileQueue.TryDequeue(out path))
             {
-                string fileName = Path.GetFileName(path);           
+                string fileName = Path.GetFileName(path);
                 try
                 {
                     PutObjectRequest putRequest = new PutObjectRequest
@@ -146,18 +163,43 @@ namespace Geotagger_V2
                 }
                 catch (AmazonS3Exception amazonS3Exception)
                 {
-                    if (amazonS3Exception.ErrorCode != null &&
-                        (amazonS3Exception.ErrorCode.Equals("InvalidAccessKeyId")
+                    if (amazonS3Exception.ErrorCode != null) {
+                        if (amazonS3Exception.ErrorCode.Equals("InvalidAccessKeyId")
                         ||
-                        amazonS3Exception.ErrorCode.Equals("InvalidSecurity")))
-                    {
-                        throw new Exception("Check the provided AWS Credentials.");
+                        amazonS3Exception.ErrorCode.Equals("InvalidSecurity"))
+                        {
+                            string message = $"Invalid login credentials {amazonS3Exception.Message}";
+                            string caption = $"{amazonS3Exception.ErrorCode}";
+                            MessageBoxButtons buttons = MessageBoxButtons.OK;
+                            DialogResult cancel;
+                            cancel = MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
+                        }
+                        else if (amazonS3Exception.ErrorCode.Equals("AccessDenied")) {
+                            string message = $"Bucket permission Error {amazonS3Exception.Message}";
+                            string caption = $"{amazonS3Exception.ErrorCode}";
+                            MessageBoxButtons buttons = MessageBoxButtons.OK;
+                            DialogResult cancel;
+                            cancel = MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
+                        }
+                        else
+                        {
+                            string message = $"Unknown Amazon error {amazonS3Exception.Message}";
+                            string caption = $"{amazonS3Exception.ErrorCode}";
+                            MessageBoxButtons buttons = MessageBoxButtons.OK;
+                            DialogResult cancel;
+                            cancel = MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
+                        }
                     }
                     else
                     {
+                        string message = $"An unknown error occured {amazonS3Exception.Message}";
+                        string caption = $"{amazonS3Exception.ErrorCode}";
+                        MessageBoxButtons buttons = MessageBoxButtons.OK;
+                        DialogResult cancel;
+                        cancel = MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
                         
-                        throw new Exception("Error occurred: " + amazonS3Exception.Message);
                     }
+                    break;
                 }
                 catch (Exception e)
                 {
@@ -166,7 +208,7 @@ namespace Geotagger_V2
                     Console.WriteLine(
                         "Unknown encountered on server. Message:'{0}' when writing an object"
                         , e.Message);
-                    result = e.ToString();
+                    //break;
                 }    
             }
             _pool.Release();

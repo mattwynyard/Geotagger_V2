@@ -392,24 +392,6 @@ namespace Geotagger_V2
             });
         }
 
-        //private void hideProgressBar()
-        //{
-        //    Dispatcher.Invoke((Action)(() => {
-        //        if (writeMode)
-        //        {
-        //            ProgressBar1.Visibility = Visibility.Hidden;
-        //            ProgressText.Visibility = Visibility.Hidden;
-        //            ProgressLabel.Visibility = Visibility.Hidden;
-        //        } else
-        //        {
-        //            ProgressBar2.Visibility = Visibility.Hidden;
-        //            ProgressText2.Visibility = Visibility.Hidden;
-        //            ProgressLabel2.Visibility = Visibility.Hidden;
-        //        }
-        //    }));
-        //}
-
-
         private void showProgressBar()
         {
             Dispatcher.Invoke((Action)(() => {
@@ -512,6 +494,8 @@ namespace Geotagger_V2
         {
             uploading = true;
             string targetDirectory = mOutputPath;
+            bucket = "akl-south-urban";
+            prefix = "test/1";
             if (Utilities.directoryHasFiles(mOutputPath))
             {
                 startTimers(500);
@@ -551,7 +535,7 @@ namespace Geotagger_V2
                 // Displays the MessageBox.
                 result = System.Windows.Forms.MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
             }
-            
+          
             
         }
     }
