@@ -506,21 +506,21 @@ namespace Geotagger_V2
                     progressIndeterminate(false);
                     Console.WriteLine("Processor Count:" + Environment.ProcessorCount);
                     AmazonUploader.Intialise(Environment.ProcessorCount);
-                    Task t = Task.Factory.StartNew(() =>
+                    Task uploader = Task.Factory.StartNew(() =>
                         AmazonUploader.Upload(targetDirectory, bucket, prefix)
                     );
-                    Task.WhenAll(t);
+                    //Task.WhenAll(uploader);
                     try
                     {
-                        t.Wait();
-                        uploading = false;
-                        dispatcherTimer.Stop();
-                        prevUploadCount = 0;
+                        uploader.Wait();
                         Dispatcher.Invoke((Action)(() =>
                         {
+                            refreshUI();
                             SpeedLabel.Content = "Items/sec: 0";
                         }));
+                        dispatcherTimer.Stop();
                         timer = false;
+                        uploading = false;
                     }
                     catch { }
                 });

@@ -208,7 +208,6 @@ namespace Geotagger_V2
                     Console.WriteLine(
                         "Unknown encountered on server. Message:'{0}' when writing an object"
                         , e.Message);
-                    //break;
                 }    
             }
             _pool.Release();
