@@ -52,7 +52,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestCertificateThumbprint>42362643F98F9F446ADCF8D7DAEE5F154E31106C</ManifestCertificateThumbprint>
@@ -61,7 +61,7 @@
     <ManifestKeyFile>Geotagger_V2_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>Geotagger_V2_TemporaryKey.pfx</AssemblyOriginatorKeyFile>
