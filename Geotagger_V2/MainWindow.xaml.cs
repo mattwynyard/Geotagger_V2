@@ -210,6 +210,7 @@ namespace Geotagger_V2
                 BrowseOutput.IsEnabled = false;
                 Geotag.IsEnabled = false;
                 TabItemRead.IsEnabled = false;
+                Upload.IsEnabled = false;
                 reader = null;
                 var source = new CancellationTokenSource();
                 CancellationToken token = source.Token;
@@ -262,24 +263,31 @@ namespace Geotagger_V2
                 try
                 {
                     await Task.WhenAll(worker);
+                    Dispatcher.Invoke((Action)(() =>
+                    {
+                        refreshUI();
+                        SpeedLabel.Content = "Items/sec: 0";
+                    }));
+                    BrowseDB.IsEnabled = true;
+                    BrowseInput.IsEnabled = true;
+                    BrowseOutput.IsEnabled = true;
+                    Geotag.IsEnabled = true;
+                    Upload.IsEnabled = true;
+                    TabItemRead.IsEnabled = true;
+                    dispatcherTimer.Stop();
+                    timer = false;
+                    TimeSpan ts = stopwatch.Elapsed;
+                    string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                    ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                    LogWriter log = new LogWriter(manager);
+                    log.Write(mDBPath, elapsedTime);
                 }
                 catch (OperationCanceledException ex)
                 {
                     manager.updateProgessMessage = "Cancelled";
                     refreshUI();
                 }
-                BrowseDB.IsEnabled = true;
-                BrowseInput.IsEnabled = true;
-                BrowseOutput.IsEnabled = true;
-                Geotag.IsEnabled = true;
-                TabItemRead.IsEnabled = true;
-                dispatcherTimer.Stop();
-                timer = false;
-                TimeSpan ts = stopwatch.Elapsed;
-                string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-                ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                LogWriter log = new LogWriter(manager);
-                log.Write(mDBPath, elapsedTime);
+                
             }
         }
 
@@ -493,9 +501,9 @@ namespace Geotagger_V2
         private void Upload_Click(object sender, RoutedEventArgs e)
         {
             uploading = true;
+            Geotag.IsEnabled = false;
+            Upload.IsEnabled = false;
             string targetDirectory = mOutputPath;
-            bucket = "akl-south-urban";
-            prefix = "test/1";
             if (Utilities.directoryHasFiles(mOutputPath))
             {
                 startTimers(500);
@@ -521,6 +529,8 @@ namespace Geotagger_V2
                         dispatcherTimer.Stop();
                         timer = false;
                         uploading = false;
+                        Geotag.IsEnabled = true;
+                        Upload.IsEnabled = true;
                     }
                     catch { }
                 });
