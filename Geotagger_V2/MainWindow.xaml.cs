@@ -174,7 +174,6 @@ namespace Geotagger_V2
             
         }
 
-
         private void startTimers()
         {
             dispatcherTimer = new DispatcherTimer();
@@ -498,6 +497,25 @@ namespace Geotagger_V2
             }         
         }
 
+        private void reset()
+        {
+            try
+            {
+                dispatcherTimer.Stop();
+                timer = false;
+                uploading = false;
+                Geotag.IsEnabled = true;
+                Upload.IsEnabled = true;
+                Dispatcher.Invoke((Action)(() =>
+                {
+                    refreshUI();
+                    SpeedLabel.Content = "Items/sec: 0";
+                }));
+                
+            }
+            catch { }
+        }
+
         private void Upload_Click(object sender, RoutedEventArgs e)
         {
             uploading = true;
@@ -512,26 +530,20 @@ namespace Geotagger_V2
                     showProgressBar();
                     progressIndeterminate(false);
                     Console.WriteLine("Processor Count:" + Environment.ProcessorCount);
-                    AmazonUploader.Intialise(Environment.ProcessorCount);
-                    Task uploader = Task.Factory.StartNew(() =>
-                        AmazonUploader.Upload(targetDirectory, bucket, prefix)
-                    );
-                    //Task.WhenAll(uploader);
-                    try
+                    bool start = AmazonUploader.Intialise(Environment.ProcessorCount);
+                    if (start)
                     {
+                        Task uploader = Task.Factory.StartNew(() =>
+                                                AmazonUploader.Upload(targetDirectory, bucket, prefix)
+                                            );
                         uploader.Wait();
-                        Dispatcher.Invoke((Action)(() =>
-                        {
-                            refreshUI();
-                            SpeedLabel.Content = "Items/sec: 0";
-                        }));
-                        dispatcherTimer.Stop();
-                        timer = false;
-                        uploading = false;
-                        Geotag.IsEnabled = true;
-                        Upload.IsEnabled = true;
+                        reset();
+                        
+                    } else
+                    {
+                        reset();
                     }
-                    catch { }
+                    
                 });
             } else
             {

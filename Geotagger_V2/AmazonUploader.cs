@@ -26,19 +26,26 @@ namespace Geotagger_V2
         public static double _progressValue;
         public static int files;
 
-        public static void Intialise(int count)
+        public static bool Intialise(int count)
         {
             try
             {
                 s3Client = new AmazonS3Client();
-            } catch (AmazonS3Exception amazonS3Exception)
+                fileQueue = new ConcurrentQueue<string>();
+                errorQueue = new BlockingCollection<string>();
+                semaphoreCount = count;
+                _pool = new Semaphore(0, count);
+                return true;
+            } catch (Exception ex)
             {
-                Console.WriteLine(amazonS3Exception.Message);
+                string message = $"Error: {ex.Message}";
+                string caption = $"Error";
+                MessageBoxButtons buttons = MessageBoxButtons.OK;
+                DialogResult cancel;
+                cancel = MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
+                return false;
             }
-            fileQueue = new ConcurrentQueue<string>();
-            errorQueue = new BlockingCollection<string>();
-            semaphoreCount = count;
-            _pool = new Semaphore(0, count);
+            
         }
 
         public static void Dispose()
