@@ -507,7 +507,6 @@ namespace Geotagger_V2
             if (Utilities.directoryHasFiles(mOutputPath))
             {
                 startTimers(500);
-                Amazon amazon = new Amazon(Environment.ProcessorCount);
                 Task upload = Task.Factory.StartNew(() =>
                 {
                     showProgressBar();

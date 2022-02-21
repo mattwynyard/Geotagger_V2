@@ -28,7 +28,13 @@ namespace Geotagger_V2
 
         public static void Intialise(int count)
         {
-            s3Client = new AmazonS3Client();
+            try
+            {
+                s3Client = new AmazonS3Client();
+            } catch (AmazonS3Exception amazonS3Exception)
+            {
+                Console.WriteLine(amazonS3Exception.Message);
+            }
             fileQueue = new ConcurrentQueue<string>();
             errorQueue = new BlockingCollection<string>();
             semaphoreCount = count;
