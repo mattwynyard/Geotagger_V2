@@ -55,7 +55,7 @@ namespace Geotagger_V2
                 openFileDialog.RestoreDirectory = true;
                 openFileDialog.ShowDialog();
                 
-                if (mDBPath != "")
+                if (openFileDialog.FileName != "")
                 {
                     txtBoxDB.Text = mDBPath = openFileDialog.FileName;
                     string bucketQuery = "SELECT Config.bucket FROM Config;";
@@ -77,10 +77,6 @@ namespace Geotagger_V2
                             bucketLabel.Content = $"Bucket: {bucket}/{prefix}";
                         }  
                     }
-                }
-                else
-                {
-                    Console.WriteLine("cancel");
                 }
             } else 
             {
