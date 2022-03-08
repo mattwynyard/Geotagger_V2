@@ -512,6 +512,27 @@ namespace Geotagger_V2
             catch { }
         }
 
+        private void deletePhotos()
+        {
+            string message = "Would you like to delete the uploaded photos from your local directory";
+            string caption = "Delete Photos";
+            MessageBoxButtons buttons = MessageBoxButtons.YesNo;
+            DialogResult result = System.Windows.Forms.MessageBox.Show(message, caption, buttons, MessageBoxIcon.Question);
+            if (result == System.Windows.Forms.DialogResult.Yes) {
+                try
+                {
+                    Directory.Delete(mOutputPath, true);
+                } catch (IOException ex)
+                {
+                    string errMessage = ex.Message;
+                    string errCaption = "Error";
+                    MessageBoxButtons errButtons = MessageBoxButtons.OK;
+                    // Displays the MessageBox.
+                    System.Windows.Forms.MessageBox.Show(errMessage, errCaption, errButtons, MessageBoxIcon.Error);
+                }
+            } 
+        }
+
         private void Upload_Click(object sender, RoutedEventArgs e)
         {
             uploading = true;
@@ -533,6 +554,7 @@ namespace Geotagger_V2
                                                 AmazonUploader.Upload(targetDirectory, bucket, prefix)
                                             );
                         uploader.Wait();
+                        deletePhotos();
                         reset();
                         
                     } else
@@ -548,7 +570,6 @@ namespace Geotagger_V2
                 string caption = "No files dectected";
                 MessageBoxButtons buttons = MessageBoxButtons.OK;
                 DialogResult result;
-
                 // Displays the MessageBox.
                 result = System.Windows.Forms.MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
             }
