@@ -281,8 +281,7 @@ namespace Geotagger_V2
                 {
                     manager.updateProgessMessage = "Cancelled";
                     refreshUI();
-                }
-                
+                }          
             }
         }
 
@@ -351,8 +350,7 @@ namespace Geotagger_V2
                     PhotoCountLabelReader.Content = "Processing photo: " + reader.updateRecordQueueCount + " of " + reader.updatePhotoCount;
                     ErrorLabelReader.Content = "Errors: " + reader.updateErrorCount;
                 }
-            }
-            
+            }      
         }
 
         /// <summary>
@@ -527,7 +525,6 @@ namespace Geotagger_V2
                     string errMessage = ex.Message;
                     string errCaption = "Error";
                     MessageBoxButtons errButtons = MessageBoxButtons.OK;
-                    // Displays the MessageBox.
                     System.Windows.Forms.MessageBox.Show(errMessage, errCaption, errButtons, MessageBoxIcon.Error);
                 }
             } 
@@ -551,8 +548,7 @@ namespace Geotagger_V2
                     if (start)
                     {
                         Task uploader = Task.Factory.StartNew(() =>
-                                                AmazonUploader.Upload(targetDirectory, bucket, prefix)
-                                            );
+                             AmazonUploader.Upload(targetDirectory, bucket, prefix));
                         uploader.Wait();
                         deletePhotos();
                         reset();
@@ -565,12 +561,10 @@ namespace Geotagger_V2
                 });
             } else
             {
-                //alert no files
                 string message = "The selected folder contains no files. Please re-select folder";
                 string caption = "No files dectected";
                 MessageBoxButtons buttons = MessageBoxButtons.OK;
                 DialogResult result;
-                // Displays the MessageBox.
                 result = System.Windows.Forms.MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
             }
           
