@@ -6,11 +6,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Threading;
 
 namespace Geotagger_V2
 {
@@ -102,7 +100,7 @@ namespace Geotagger_V2
                         try
                         {
                             t.Wait();
-                            Interlocked.Exchange(ref _progressMessage, "Finished..... ");
+                            Interlocked.Exchange(ref _progressMessage, "Uploaded..... ");
                             watch.Stop();
                             Thread.Sleep(1000);
                             Console.WriteLine($"Time Taken: { watch.ElapsedMilliseconds} ms.");

@@ -497,12 +497,12 @@ namespace Geotagger_V2
             {
                 dispatcherTimer.Stop();
                 timer = false;
-                uploading = false;
-                Geotag.IsEnabled = true;
-                Upload.IsEnabled = true;
                 Dispatcher.Invoke((Action)(() =>
                 {
                     refreshUI();
+                    uploading = false;
+                    Geotag.IsEnabled = true;
+                    Upload.IsEnabled = true;
                     SpeedLabel.Content = "Items/sec: 0";
                 }));
                 
@@ -519,8 +519,16 @@ namespace Geotagger_V2
             if (result == System.Windows.Forms.DialogResult.Yes) {
                 try
                 {
-                    Directory.Delete(mOutputPath, true);
-                } catch (IOException ex)
+                    if (Directory.Exists(mOutputPath)) {
+                        Dispatcher.Invoke((Action)(() =>
+                        {
+                            Geotag.IsEnabled = false;
+                            Upload.IsEnabled = false;
+                            ProgressLabel.Content = "Deleting.....";
+                        }));
+                        Directory.Delete(mOutputPath, true);
+                    }
+                } catch (Exception ex)
                 {
                     string errMessage = ex.Message;
                     string errCaption = "Error";
@@ -550,15 +558,21 @@ namespace Geotagger_V2
                         Task uploader = Task.Factory.StartNew(() =>
                              AmazonUploader.Upload(targetDirectory, bucket, prefix));
                         uploader.Wait();
-                        deletePhotos();
                         reset();
-                        
+                        deletePhotos();
+                        Dispatcher.Invoke((Action)(() =>
+                        {
+                            ProgressLabel.Content = "Finished!";
+                            Geotag.IsEnabled = true;
+                            Upload.IsEnabled = true;
+                        }));
                     } else
                     {
                         reset();
                     }
                     
                 });
+                
             } else
             {
                 string message = "The selected folder contains no files. Please re-select folder";
