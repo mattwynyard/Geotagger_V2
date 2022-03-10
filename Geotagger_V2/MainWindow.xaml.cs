@@ -515,7 +515,7 @@ namespace Geotagger_V2
             string message = "Would you like to delete the uploaded photos from your local directory";
             string caption = "Delete Photos";
             MessageBoxButtons buttons = MessageBoxButtons.YesNo;
-            DialogResult result = System.Windows.Forms.MessageBox.Show(message, caption, buttons, MessageBoxIcon.Question);
+            DialogResult result = System.Windows.Forms.MessageBox.Show(new Form() { TopMost = true }, message, caption, buttons, MessageBoxIcon.Question);
             if (result == System.Windows.Forms.DialogResult.Yes) {
                 try
                 {
