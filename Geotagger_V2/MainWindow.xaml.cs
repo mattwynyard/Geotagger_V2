@@ -525,8 +525,21 @@ namespace Geotagger_V2
                             Geotag.IsEnabled = false;
                             Upload.IsEnabled = false;
                             ProgressLabel.Content = "Deleting.....";
+                            ProgressBar1.Value = 0;
                         }));
-                        Directory.Delete(mOutputPath, true);
+                        string[] files = Directory.GetFiles(mOutputPath);
+                        for (int i = 0; i < files.Length; i++)
+                        {
+                            File.Delete(files[i]);
+                            double progress = (i / (double)files.Length) * 100;
+                            int progressValue = (int)Math.Ceiling(progress);
+                            Dispatcher.Invoke((Action)(() =>
+                            {
+                                ProgressBar1.Value = progress;
+                                ProgressText.Text = progressValue.ToString() + "%";
+                            }));
+                        }
+                        Directory.Delete(mOutputPath);
                     }
                 } catch (Exception ex)
                 {
