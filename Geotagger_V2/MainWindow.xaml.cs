@@ -571,6 +571,7 @@ namespace Geotagger_V2
                         Task uploader = Task.Factory.StartNew(() =>
                              AmazonUploader.Upload(targetDirectory, bucket, prefix));
                         uploader.Wait();
+                        AmazonUploader.Dispose();
                         reset();
                         deletePhotos();
                         Dispatcher.Invoke((Action)(() =>
