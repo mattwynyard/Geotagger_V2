@@ -271,36 +271,36 @@ namespace Geotagger_V2
         /// <param name="row: the access record"></param>
         private async Task<Record> buildRecord(Object[] row)
         {
-            Record r = new Record((string)row[1]);
+            Record record = new Record((string)row[1]);
             await Task.Run(() =>
             {
                 try
                 {
                     int id = (int)row[0];
-                    r.Id = id.ToString();
-                    r.PhotoRename = Convert.ToString(row[2]);
-                    r.Latitude = (double)row[3];
-                    r.Longitude = (double)row[4];
-                    r.Altitude = (double)row[5];
-                    r.Bearing = Convert.ToDouble(row[6]);
-                    r.Velocity = Convert.ToDouble(row[7]);
-                    r.Satellites = Convert.ToInt32(row[8]);
-                    r.PDop = Convert.ToDouble(row[9]);
-                    r.Inspector = Convert.ToString(row[10]);
-                    r.TimeStamp = Convert.ToDateTime(row[12]);
-                    r.GeoMark = Convert.ToBoolean(row[13]);
-                    r.Side = Convert.ToString(row[17]);
-                    r.Road = Convert.ToInt32(row[18]);
-                    r.Carriageway = Convert.ToInt32(row[19]);
-                    r.ERP = Convert.ToInt32(row[20]);
-                    r.FaultID = Convert.ToInt32(row[21]);     
+                    record.Id = id.ToString();
+                    record.PhotoRename = Convert.ToString(row[2]);
+                    record.Latitude = (double)row[3];
+                    record.Longitude = (double)row[4];
+                    record.Altitude = (double)row[5];
+                    record.Bearing = Convert.ToDouble(row[6]);
+                    record.Velocity = Convert.ToDouble(row[7]);
+                    record.Satellites = Convert.ToInt32(row[8]);
+                    record.PDop = Convert.ToDouble(row[9]);
+                    record.Inspector = Convert.ToString(row[10]);
+                    record.TimeStamp = Convert.ToDateTime(row[12]);
+                    record.GeoMark = Convert.ToBoolean(row[13]);
+                    record.Side = Convert.ToString(row[17]);
+                    record.Road = Convert.ToInt32(row[18]);
+                    record.Carriageway = Convert.ToInt32(row[19]);
+                    record.ERP = Convert.ToInt32(row[20]);
+                    record.FaultID = Convert.ToInt32(row[21]);     
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e.StackTrace);
                 }
             });
-            return r;
+            return record;
 
         }
 

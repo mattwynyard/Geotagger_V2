@@ -37,8 +37,6 @@ namespace Geotagger_V2
         public MainWindow()
         {
             InitializeComponent();
-            //ProgressBar1.Visibility = Visibility.Hidden;
-            //ProgressText.Visibility = Visibility.Hidden;
             ProgressBar2.Visibility = Visibility.Hidden;
             ProgressText2.Visibility = Visibility.Hidden;
             writeMode = true;
@@ -83,6 +81,10 @@ namespace Geotagger_V2
                 if (TabItemWrite.IsSelected) //write
                 {
                     FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog();
+                    if (Directory.Exists(Directory.GetParent(mDBPath).ToString()))
+                    {
+                        browseFolderDialog.SelectedPath = Directory.GetParent(mDBPath).ToString();
+                    }
                     browseFolderDialog.ShowDialog();
                     if (b.Name == "BrowseInput")
                     {
@@ -199,6 +201,7 @@ namespace Geotagger_V2
             {
                 manager = GTWriter.Instance(50);
                 manager.Initialise();
+                refreshUI();
                 startTimers();
                 BrowseDB.IsEnabled = false;
                 BrowseInput.IsEnabled = false;
@@ -571,7 +574,6 @@ namespace Geotagger_V2
                         Task uploader = Task.Factory.StartNew(() =>
                              AmazonUploader.Upload(targetDirectory, bucket, prefix));
                         uploader.Wait();
-                        AmazonUploader.Dispose();
                         reset();
                         deletePhotos();
                         Dispatcher.Invoke((Action)(() =>

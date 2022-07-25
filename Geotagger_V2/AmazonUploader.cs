@@ -33,6 +33,7 @@ namespace Geotagger_V2
                 errorQueue = new BlockingCollection<string>();
                 semaphoreCount = count;
                 _pool = new Semaphore(0, count);
+                uploadSum = 0;
                 return true;
             } catch (Exception ex)
             {
