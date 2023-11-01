@@ -40,6 +40,7 @@ namespace Geotagger_V2
             ProgressBar2.Visibility = Visibility.Hidden;
             ProgressText2.Visibility = Visibility.Hidden;
             writeMode = true;
+            txtBoxDB.Text = mDBPath = Properties.Settings.Default.AccessDB;
         }
 
         private void BrowseDB_Button_Click(object sender, RoutedEventArgs e)
@@ -53,29 +54,29 @@ namespace Geotagger_V2
                 openFileDialog.RestoreDirectory = true;
                 openFileDialog.ShowDialog();
                 
-                if (openFileDialog.FileName != "")
+                txtBoxDB.Text = mDBPath = openFileDialog.FileName;
+                Properties.Settings.Default.AccessDB = openFileDialog.FileName;
+                Properties.Settings.Default.Save();
+                string bucketQuery = "SELECT Config.bucket FROM Config;";
+                string prefixQuery = "SELECT Config.prefix FROM Config;";
+                if (mDBPath != null)
                 {
-                    txtBoxDB.Text = mDBPath = openFileDialog.FileName;
-                    string bucketQuery = "SELECT Config.bucket FROM Config;";
-                    string prefixQuery = "SELECT Config.prefix FROM Config;";
-                    if (mDBPath != null)
+                    string[] bucketArr = queryDB(bucketQuery, mDBPath);
+                    string[] prefixArr = queryDB(prefixQuery, mDBPath);
+                    if (bucketArr[0] != null || prefixArr[0] != null)
                     {
-                        string[] bucketArr = queryDB(bucketQuery, mDBPath);
-                        string[] prefixArr = queryDB(prefixQuery, mDBPath);
-                        if (bucketArr[0] != null || prefixArr[0] != null)
-                        {
-                            string caption = "Error";
-                            MessageBoxButtons buttons = MessageBoxButtons.OK;
-                            System.Windows.Forms.MessageBox.Show(bucketArr[0], caption, buttons, MessageBoxIcon.Error);
-                            bucketLabel.Content = $"Bucket: Error";
-                        } else
-                        {
-                            bucket = bucketArr[1];
-                            prefix = prefixArr[1];
-                            bucketLabel.Content = $"Bucket: {bucket}/{prefix}";
-                        }  
-                    }
+                        string caption = "Error";
+                        MessageBoxButtons buttons = MessageBoxButtons.OK;
+                        System.Windows.Forms.MessageBox.Show(bucketArr[0], caption, buttons, MessageBoxIcon.Error);
+                        bucketLabel.Content = $"Bucket: Error";
+                    } else
+                    {
+                        bucket = bucketArr[1];
+                        prefix = prefixArr[1];
+                        bucketLabel.Content = $"Bucket: {bucket}/{prefix}";
+                    }  
                 }
+
             } else 
             {
                 if (TabItemWrite.IsSelected) //write
@@ -542,7 +543,7 @@ namespace Geotagger_V2
                                 ProgressText.Text = progressValue.ToString() + "%";
                             }));
                         }
-                        Directory.Delete(mOutputPath);
+                        //Directory.Delete(mOutputPath);
                     }
                 } catch (Exception ex)
                 {

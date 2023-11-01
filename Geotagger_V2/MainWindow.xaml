@@ -29,16 +29,16 @@
                         <ColumnDefinition Width="11*"/>
                         <ColumnDefinition Width="881*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="txtBoxDB" HorizontalAlignment="Left" Height="20" Margin="20,48,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476" Grid.Column="5"/>
-                    <TextBox x:Name="txtBoxOutput" HorizontalAlignment="Left" Height="20" Margin="20,131,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476" Grid.Column="5"/>
-                    <TextBox x:Name="txtBoxInput" HorizontalAlignment="Left" Height="20" Margin="20,85,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476" Grid.Column="5"/>
-                    <Button x:Name="BrowseDB" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="501,48,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="5"/>
-                    <Label Content="Database Path" HorizontalAlignment="Left" Height="27" Margin="0,45,0,0" VerticalAlignment="Top" Width="89" RenderTransformOrigin="0.58,1.863" Grid.ColumnSpan="5" Grid.Column="1"/>
-                    <Label Content="Input Path" HorizontalAlignment="Left" Height="27" Margin="0,82,0,0" VerticalAlignment="Top" Width="69" RenderTransformOrigin="0.58,1.863" Grid.ColumnSpan="4" Grid.Column="1"/>
-                    <Label Content="Output Path" HorizontalAlignment="Left" Height="27" Margin="0,128,0,0" VerticalAlignment="Top" Width="84" RenderTransformOrigin="0.58,1.863" Grid.ColumnSpan="5" Grid.Column="1"/>
-                    <Button x:Name="BrowseInput" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="501,85,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="5"/>
-                    <Button x:Name="BrowseOutput" Content="Browse" HorizontalAlignment="Left" Height="20" Margin="501,131,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="5"/>
-                    <Button x:Name="Geotag" Content="Geotag" HorizontalAlignment="Left" Margin="675,48,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Geotag_Click" Grid.Column="5" IsEnabled="False"/>
+                    <TextBox x:Name="txtBoxDB" HorizontalAlignment="Left" Height="30" Margin="82,50,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="516" Grid.Column="5" FontSize="14"/>
+                    <TextBox x:Name="txtBoxOutput" HorizontalAlignment="Left" Height="30" Margin="82,136,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="516" Grid.Column="5" FontSize="14"/>
+                    <TextBox x:Name="txtBoxInput" HorizontalAlignment="Left" Height="30" Margin="82,92,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="516" Grid.Column="5" FontSize="14"/>
+                    <Button x:Name="BrowseDB" Content="Browse" HorizontalAlignment="Left" Height="30" Margin="614,49,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="5" FontSize="14"/>
+                    <Label Content="Database Path" HorizontalAlignment="Left" Height="27" Margin="10,52,0,0" VerticalAlignment="Top" Width="106" RenderTransformOrigin="0.58,1.863" Grid.Column="2" FontSize="14" Grid.ColumnSpan="4"/>
+                    <Label Content="Photo Input Path" HorizontalAlignment="Left" Height="27" Margin="33,91,0,0" VerticalAlignment="Top" Width="118" RenderTransformOrigin="0.58,1.863" Grid.ColumnSpan="5" Grid.Column="1" FontSize="14"/>
+                    <Label Content="Amazon Output Path" HorizontalAlignment="Left" Height="26" Margin="5,132,0,0" VerticalAlignment="Top" Width="146" RenderTransformOrigin="0.58,1.863" Grid.ColumnSpan="5" FontSize="14" Grid.Column="1"/>
+                    <Button x:Name="BrowseInput" Content="Browse" HorizontalAlignment="Left" Height="30" Margin="614,91,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="5" FontSize="14"/>
+                    <Button x:Name="BrowseOutput" Content="Browse" HorizontalAlignment="Left" Height="30" Margin="614,136,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="5" FontSize="14"/>
+                    <Button x:Name="Geotag" Content="Geotag" HorizontalAlignment="Left" Margin="746,127,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Geotag_Click" Grid.Column="5" IsEnabled="False"/>
                     <ProgressBar Name="ProgressBar1" HorizontalAlignment="Left" Height="31" Margin="20,186,0,0" VerticalAlignment="Top" Width="476" Grid.Column="5"/>
                     <TextBlock  Name="ProgressText" Text="{Binding ElementName=ProgressBar1, Path=Value, StringFormat={}{0:0}%}" Margin="254,0,595,320" Height="17" Width="32" RenderTransformOrigin="-0.2,0.359" VerticalAlignment="Bottom" Grid.Column="5" />
                     <Label Name="ProgressLabel" HorizontalAlignment="Left" Margin="20,156,0,0" VerticalAlignment="Top" Width="476" Height="30" Grid.Column="5"/>
@@ -72,7 +72,7 @@
                         </Grid>
                     </Expander>
                     <Label x:Name="SpeedLabel" Content="Items/sec: 0" HorizontalAlignment="Left" Margin="217,222,0,0" VerticalAlignment="Top" Width="192" Grid.Column="5"/>
-                    <Button x:Name="Upload" Content="Upload" HorizontalAlignment="Left" Margin="675,105,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Upload_Click" Grid.Column="5" IsEnabled="False"/>
+                    <Button x:Name="Upload" Content="Upload" HorizontalAlignment="Left" Margin="688,190,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Upload_Click" Grid.Column="5" IsEnabled="False"/>
                     <Label x:Name="bucketLabel" Content="Bucket" Grid.Column="5" HorizontalAlignment="Left" Margin="501,382,0,0" VerticalAlignment="Top" Width="281"/>
 
                 </Grid>
