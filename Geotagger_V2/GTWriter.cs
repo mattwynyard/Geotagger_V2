@@ -414,8 +414,8 @@ namespace Geotagger_V2
                     //do image correction
                     //CLAHE correction
                     Bitmap bmp = item[1] as Bitmap;
-                    //Image<Bgr, Byte> img = bmp.ToImage<Bgr, byte>(); Used for EMGUCV 4.3 error when using this version rolled back to 4.1
-                    Image<Bgr, Byte> img = new Image<Bgr, Byte>(bmp);
+                    Image<Bgr, Byte> img = bmp.ToImage<Bgr, byte>(); //Used for EMGUCV 4.3 error when using this version rolled back to 4.1
+                    //Image<Bgr, Byte> img = new Image<Bgr, Byte>(bmp);
                     Mat src = img.Mat;
                     Image<Bgr, Byte> emguImage = CorrectionUtil.ClaheCorrection(src, 0.5);
                     emguImage = CorrectionUtil.GammaCorrection(emguImage);
