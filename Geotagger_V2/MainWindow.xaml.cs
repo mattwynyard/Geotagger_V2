@@ -60,8 +60,7 @@ namespace Geotagger_V2
                 } else
                 {
                     return;
-                }
-               
+                }           
             }
         }
 
@@ -83,16 +82,7 @@ namespace Geotagger_V2
                 {
                     return;
                 }
-
             }
-            //FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog();
-            //browseFolderDialog.SelectedPath = Properties.Settings.Default.RootFolder;
-            //browseFolderDialog.ShowDialog();
-            //txtBoxOutput.Text = mOutputPath = browseFolderDialog.SelectedPath;
-            //if (Directory.Exists(mOutputPath))
-            //{
-            //    Upload.IsEnabled = true;
-            //}
         }
 
         private void SavePersistentValue(string key, string value)

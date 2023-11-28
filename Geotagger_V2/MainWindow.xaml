@@ -39,12 +39,12 @@
                     <Button x:Name="BrowseInput" Content="Browse" HorizontalAlignment="Left" Height="30" Margin="614,91,0,0" VerticalAlignment="Top" Width="77" Click="BrowseInput_Button_Click" Grid.Column="5" FontSize="14"/>
                     <Button x:Name="BrowseOutput" Content="Browse" HorizontalAlignment="Left" Height="30" Margin="614,136,0,0" VerticalAlignment="Top" Width="77" Click="BrowseOutput_Button_Click" Grid.Column="5" FontSize="14"/>
                     <Button x:Name="Geotag" Content="Geotag" HorizontalAlignment="Left" Margin="748,52,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Geotag_Click" Grid.Column="5" IsEnabled="False"/>
-                    <ProgressBar Name="ProgressBar1" HorizontalAlignment="Left" Height="31" Margin="20,186,0,0" VerticalAlignment="Top" Width="476" Grid.Column="5"/>
-                    <TextBlock  Name="ProgressText" Text="{Binding ElementName=ProgressBar1, Path=Value, StringFormat={}{0:0}%}" Margin="254,0,595,320" Height="17" Width="32" RenderTransformOrigin="-0.2,0.359" VerticalAlignment="Bottom" Grid.Column="5" />
-                    <Label Name="ProgressLabel" HorizontalAlignment="Left" Margin="20,156,0,0" VerticalAlignment="Top" Width="476" Height="30" Grid.Column="5"/>
-                    <Label Content="Time Elapsed:" HorizontalAlignment="Left" Margin="20,222,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.682,-0.804" Width="85" Grid.Column="5"/>
-                    <Label Name="TimeLabel" Content="00:00:00.00" HorizontalAlignment="Left" Margin="105,222,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.179,-0.547" Width="81" Grid.Column="5"/>
-                    <Expander Header="Details" HorizontalAlignment="Left" Height="203" Margin="20,253,0,0" VerticalAlignment="Top" Width="817" IsExpanded="True" Grid.Column="5">
+                    <ProgressBar Name="ProgressBar1" HorizontalAlignment="Left" Height="31" Margin="108,207,0,0" VerticalAlignment="Top" Width="476" Grid.Column="5"/>
+                    <TextBlock  Name="ProgressText" Text="{Binding ElementName=ProgressBar1, Path=Value, StringFormat={}{0:0}%}" Margin="346,0,503,296" Height="17" Width="32" RenderTransformOrigin="-0.2,0.359" VerticalAlignment="Bottom" Grid.Column="5" />
+                    <Label Name="ProgressLabel" HorizontalAlignment="Left" Margin="175,172,0,0" VerticalAlignment="Top" Width="374" Height="30" Grid.Column="5" FontSize="14" FontWeight="Bold" HorizontalContentAlignment="Center"/>
+                    <Label Content="Time Elapsed:" HorizontalAlignment="Left" Margin="110,246,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.682,-0.804" Width="85" Grid.Column="5"/>
+                    <Label Name="TimeLabel" Content="00:00:00.00" HorizontalAlignment="Left" Margin="195,246,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.179,-0.547" Width="81" Grid.Column="5"/>
+                    <Expander Header="Details" HorizontalAlignment="Left" Height="203" Margin="10,272,0,0" VerticalAlignment="Top" Width="817" IsExpanded="True" Grid.Column="5">
                         <Grid Background="#FFE5E5E5" Margin="0,0,8,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="7*"/>
@@ -71,10 +71,10 @@
                             <Label x:Name="PhotoErrorLabel" Content="Geotag Errors: 0" Grid.Column="3" HorizontalAlignment="Left" Margin="116,96,0,0" VerticalAlignment="Top" Width="195" Height="26"/>
                         </Grid>
                     </Expander>
-                    <Label x:Name="SpeedLabel" Content="Items/sec: 0" HorizontalAlignment="Left" Margin="217,222,0,0" VerticalAlignment="Top" Width="192" Grid.Column="5"/>
+                    <Label x:Name="SpeedLabel" Content="Items/sec: 0" HorizontalAlignment="Center" Margin="0,243,0,0" VerticalAlignment="Top" Width="128" Grid.Column="5"/>
                     <Button x:Name="Upload" Content="Upload" HorizontalAlignment="Left" Margin="748,108,0,0" VerticalAlignment="Top" Width="77" Height="37" Click="Upload_Click" Grid.Column="5" IsEnabled="False"/>
-                    <Label x:Name="bucketLabel" Content="Bucket" Grid.Column="5" HorizontalAlignment="Left" Margin="501,382,0,0" VerticalAlignment="Top" Width="281"/>
-                    <Label Grid.Column="5" Content="v1.2" HorizontalAlignment="Left" Margin="806,461,0,0" VerticalAlignment="Top" FontSize="14" FontWeight="Bold"/>
+                    <Label x:Name="bucketLabel" Content="Bucket" Grid.Column="5" HorizontalAlignment="Left" Margin="496,405,0,0" VerticalAlignment="Top" Width="281"/>
+                    <Label Grid.Column="5" Content="v1.2" HorizontalAlignment="Left" Margin="768,436,0,0" VerticalAlignment="Top" FontSize="14" FontWeight="Bold"/>
 
                 </Grid>
             </TabItem>
