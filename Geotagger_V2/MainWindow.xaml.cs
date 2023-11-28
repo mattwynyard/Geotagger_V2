@@ -100,7 +100,6 @@ namespace Geotagger_V2
 
         private void BrowseDB_Button_Click(object sender, RoutedEventArgs e)
         {
-            //System.Windows.Controls.Button b = sender as System.Windows.Controls.Button;
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Title = "Import Access Database";
             openFileDialog.Filter = "MS Access (*.mdb *.accdb)|*.mdb;*.accdb";
