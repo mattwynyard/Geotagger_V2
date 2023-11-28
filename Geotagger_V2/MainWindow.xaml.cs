@@ -33,6 +33,7 @@ namespace Geotagger_V2
         private int prevUploadCount = 0;
         private string bucket;
         private string prefix;
+       
 
         public MainWindow()
         {
@@ -43,90 +44,158 @@ namespace Geotagger_V2
             txtBoxDB.Text = mDBPath = Properties.Settings.Default.AccessDB;
         }
 
-        private void BrowseDB_Button_Click(object sender, RoutedEventArgs e)
+        private void BrowseInput_Button_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.Controls.Button b = sender as System.Windows.Controls.Button;
-            if (b.Name == "BrowseDB")
+            using (var browseFolderDialog = new FolderBrowserDialog())
             {
-                OpenFileDialog openFileDialog = new OpenFileDialog();
-                openFileDialog.Title = "Import Access Database";
-                openFileDialog.Filter = "MS Access (*.mdb *.accdb)|*.mdb;*.accdb";
-                openFileDialog.RestoreDirectory = true;
-                openFileDialog.ShowDialog();
-                
-                txtBoxDB.Text = mDBPath = openFileDialog.FileName;
-                Properties.Settings.Default.AccessDB = openFileDialog.FileName;
-                Properties.Settings.Default.Save();
-                string bucketQuery = "SELECT Config.bucket FROM Config;";
-                string prefixQuery = "SELECT Config.prefix FROM Config;";
-                if (mDBPath != null)
+                browseFolderDialog.SelectedPath = Properties.Settings.Default.RootFolder;
+                DialogResult result = browseFolderDialog.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(browseFolderDialog.SelectedPath))
                 {
-                    string[] bucketArr = queryDB(bucketQuery, mDBPath);
-                    string[] prefixArr = queryDB(prefixQuery, mDBPath);
-                    if (bucketArr[0] != null || prefixArr[0] != null)
+                    txtBoxInput.Text = mInputPath = browseFolderDialog.SelectedPath;
+                    if (File.Exists(mDBPath) && Directory.Exists(mInputPath))
                     {
-                        string caption = "Error";
-                        MessageBoxButtons buttons = MessageBoxButtons.OK;
-                        System.Windows.Forms.MessageBox.Show(bucketArr[0], caption, buttons, MessageBoxIcon.Error);
-                        bucketLabel.Content = $"Bucket: Error";
-                    } else
-                    {
-                        bucket = bucketArr[1];
-                        prefix = prefixArr[1];
-                        bucketLabel.Content = $"Bucket: {bucket}/{prefix}";
-                    }  
+                        Geotag.IsEnabled = true;
+                    }
+                } else
+                {
+                    return;
                 }
-
-            } else 
-            {
-                if (TabItemWrite.IsSelected) //write
-                {
-                    FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog();
-                    if (Directory.Exists(Directory.GetParent(mDBPath).ToString()))
-                    {
-                        browseFolderDialog.SelectedPath = Directory.GetParent(mDBPath).ToString();
-                    }
-                    browseFolderDialog.ShowDialog();
-                    if (b.Name == "BrowseInput")
-                    {
-                        if (browseFolderDialog.SelectedPath != "")
-                        {
-                            txtBoxInput.Text = mInputPath = browseFolderDialog.SelectedPath;
-                            
-                        }
-                    }
-                    else
-                    {
-                        if (browseFolderDialog.SelectedPath != "")
-                        {
-                            txtBoxOutput.Text = mOutputPath = browseFolderDialog.SelectedPath;
-                            Upload.IsEnabled = true;
-                            Geotag.IsEnabled = true;
-                        }
-                    }
-                } else //read
-                {
-                    if (b.Name == "BrowseInputRead")
-                    {
-                        FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog();
-                        browseFolderDialog.ShowDialog();
-                        if (browseFolderDialog.SelectedPath != "")
-                        {
-                            txtInputPathRead.Text = mInputPath = browseFolderDialog.SelectedPath;
-                        }
-                    } else
-                    {
-                        SaveFileDialog saveFileDialog1 = new SaveFileDialog();
-                        saveFileDialog1.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
-                        saveFileDialog1.ShowDialog();
-                        if (saveFileDialog1.FileName != "")
-                        {
-                            txtOutputPathRead.Text = mOutputPath = saveFileDialog1.FileName;
-                        }
-                    }                 
-                }             
+               
             }
         }
+
+        private void BrowseOutput_Button_Click(object sender, RoutedEventArgs e)
+        {
+            using (var browseFolderDialog = new FolderBrowserDialog())
+            {
+                browseFolderDialog.SelectedPath = Properties.Settings.Default.RootFolder;
+                DialogResult result = browseFolderDialog.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(browseFolderDialog.SelectedPath))
+                {
+                    txtBoxOutput.Text = mOutputPath = browseFolderDialog.SelectedPath;
+                    if (Directory.Exists(mOutputPath))
+                    {
+                        Upload.IsEnabled = true;
+                    }
+                }
+                else
+                {
+                    return;
+                }
+
+            }
+            //FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog();
+            //browseFolderDialog.SelectedPath = Properties.Settings.Default.RootFolder;
+            //browseFolderDialog.ShowDialog();
+            //txtBoxOutput.Text = mOutputPath = browseFolderDialog.SelectedPath;
+            //if (Directory.Exists(mOutputPath))
+            //{
+            //    Upload.IsEnabled = true;
+            //}
+        }
+
+        private void SavePersistentValue(string key, string value)
+        {
+            if (key == "access")
+            {
+                Properties.Settings.Default.AccessDB = value;
+                
+            } else if (key == "root")
+            {
+                Properties.Settings.Default.RootFolder = value;
+            }
+            Properties.Settings.Default.Save();
+        }
+
+        private void BrowseDB_Button_Click(object sender, RoutedEventArgs e)
+        {
+            //System.Windows.Controls.Button b = sender as System.Windows.Controls.Button;
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Title = "Import Access Database";
+            openFileDialog.Filter = "MS Access (*.mdb *.accdb)|*.mdb;*.accdb";
+            openFileDialog.RestoreDirectory = true;
+            openFileDialog.ShowDialog();
+
+            txtBoxDB.Text = mDBPath = openFileDialog.FileName;
+            SavePersistentValue("access", openFileDialog.FileName);
+            if (txtBoxDB.Text == "") return; //TODO fix when user presses cancel
+            string rootDirectory = Directory.GetParent(openFileDialog.FileName).FullName;
+            SavePersistentValue("root", rootDirectory);
+            string bucketQuery = "SELECT Config.bucket FROM Config;";
+            string prefixQuery = "SELECT Config.prefix FROM Config;";
+            if (mDBPath != null)
+            {
+                string[] bucketArr = queryDB(bucketQuery, mDBPath);
+                string[] prefixArr = queryDB(prefixQuery, mDBPath);
+                if (bucketArr[0] != null || prefixArr[0] != null)
+                {
+                    string caption = "Error";
+                    MessageBoxButtons buttons = MessageBoxButtons.OK;
+                    System.Windows.Forms.MessageBox.Show(bucketArr[0], caption, buttons, MessageBoxIcon.Error);
+                    bucketLabel.Content = $"Bucket: Error";
+                } else
+                {
+                    bucket = bucketArr[1];
+                    prefix = prefixArr[1];
+                    bucketLabel.Content = $"Bucket: {bucket}/{prefix}";
+                }
+            }
+        }
+
+        //    } else 
+        //    {
+        //        if (TabItemWrite.IsSelected) //write
+        //        {
+
+        //            FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog();
+        //            //if (Directory.Exists(Directory.GetParent(mDBPath).ToString()))
+        //            //{
+        //            //    browseFolderDialog.SelectedPath = Directory.GetParent(mDBPath).ToString();
+        //            //}
+        //            browseFolderDialog.ShowDialog();
+        //            if (b.Name == "BrowseInput")
+        //            {
+        //                if (browseFolderDialog.SelectedPath != "")
+        //                {
+        //                    txtBoxInput.Text = mInputPath = browseFolderDialog.SelectedPath;
+        //                    Properties.Settings.Default.PhotoFolder = txtBoxInput.Text;
+        //                    Properties.Settings.Default.Save();
+
+        //                }
+        //            }
+        //            else
+        //            {
+        //                if (browseFolderDialog.SelectedPath != "")
+        //                {
+        //                    txtBoxOutput.Text = mOutputPath = browseFolderDialog.SelectedPath;
+        //                    Upload.IsEnabled = true;
+        //                    Geotag.IsEnabled = true;
+        //                }
+        //            }
+        //        } else //read
+        //        {
+        //            if (b.Name == "BrowseInputRead")
+        //            {
+        //                FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog();
+        //                browseFolderDialog.ShowDialog();
+        //                if (browseFolderDialog.SelectedPath != "")
+        //                {
+        //                    txtInputPathRead.Text = mInputPath = browseFolderDialog.SelectedPath;
+        //                }
+        //            } else
+        //            {
+        //                SaveFileDialog saveFileDialog1 = new SaveFileDialog();
+        //                saveFileDialog1.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
+        //                saveFileDialog1.ShowDialog();
+        //                if (saveFileDialog1.FileName != "")
+        //                {
+        //                    txtOutputPathRead.Text = mOutputPath = saveFileDialog1.FileName;
+        //                }
+        //            }                 
+        //        }             
+        //    }
+        //}
         private async void GeotagRead_Click(object sender, RoutedEventArgs e)
         {
             if (Utilities.directoryHasFiles(mInputPath)) {
@@ -601,5 +670,7 @@ namespace Geotagger_V2
           
             
         }
+
+        
     }
 }
