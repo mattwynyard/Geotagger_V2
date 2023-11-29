@@ -59,17 +59,33 @@ namespace Geotagger_V2
 
                 }
                 if(File.Exists(mDBPath) && Directory.Exists(mInputPath) && Directory.Exists(mOutputPath))
+                //if (File.Exists(mDBPath) && Directory.Exists(mInputPath))
                     {
                     Geotag.IsEnabled = true;
                 } else
                 {
-                    Console.WriteLine("path error");
+                    Geotag.IsEnabled = false;
                 }
             }
             if (bucket == null  || prefix == null)
             {
                 setAmazonBucketFromAccess();
             }
+        }
+
+        private bool FolderHasPhotos(string ProcessingDirectory)
+        {
+            DirectoryInfo di = new DirectoryInfo(ProcessingDirectory);
+            FileInfo[] JPGFiles = di.GetFiles("*.jpg");
+            if (JPGFiles.Length == 0)
+            {
+                return false;
+            } else
+            {
+                return true;
+            }
+            //foreach (var fi in JPGFiles)
+            //    log.Info(fi.Exists);
         }
 
         private void BrowseOutput_Button_Click(object sender, RoutedEventArgs e)
@@ -84,9 +100,20 @@ namespace Geotagger_V2
                     if (File.Exists(mDBPath) && Directory.Exists(mInputPath) && Directory.Exists(mOutputPath))
                     {
                         Geotag.IsEnabled = true;
+                        if (FolderHasPhotos(mOutputPath))
+                        {
+                            Upload.IsEnabled = true;
+                        }
                     } else
                     {
-                        Console.WriteLine("path error");
+                        if (FolderHasPhotos(mOutputPath))
+                        {
+                            Upload.IsEnabled = true;
+                            if (bucket == null || prefix == null)
+                            {
+                                setAmazonBucketFromAccess();
+                            }
+                        }
                     }
                 }
             }
@@ -682,7 +709,7 @@ namespace Geotagger_V2
 
         private void CheckBox_Click(object sender, RoutedEventArgs e)
         {
-
+            Console.WriteLine("click lock");
         }
     }
 }
