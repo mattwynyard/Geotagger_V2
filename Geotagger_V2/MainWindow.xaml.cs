@@ -665,6 +665,7 @@ namespace Geotagger_V2
         private void Upload_Click(object sender, RoutedEventArgs e)
         {
             uploading = true;
+            refreshUI();
             Geotag.IsEnabled = false;
             Upload.IsEnabled = false;
             string targetDirectory = mOutputPath;
@@ -694,7 +695,7 @@ namespace Geotagger_V2
                     }
                     
                 });
-                
+            
             } else
             {
                 string message = "The selected folder contains no files. Please re-select folder";
@@ -702,9 +703,7 @@ namespace Geotagger_V2
                 MessageBoxButtons buttons = MessageBoxButtons.OK;
                 DialogResult result;
                 result = System.Windows.Forms.MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
-            }
-          
-            
+            }         
         }
 
     }
