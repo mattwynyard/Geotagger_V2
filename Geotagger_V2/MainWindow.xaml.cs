@@ -707,9 +707,5 @@ namespace Geotagger_V2
             
         }
 
-        private void CheckBox_Click(object sender, RoutedEventArgs e)
-        {
-            Console.WriteLine("click lock");
-        }
     }
 }
