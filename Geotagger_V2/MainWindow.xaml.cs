@@ -33,6 +33,7 @@ namespace Geotagger_V2
         private int prevUploadCount = 0;
         private string bucket;
         private string prefix;
+        private bool amazonLocked;
        
 
         public MainWindow()
@@ -42,6 +43,7 @@ namespace Geotagger_V2
             ProgressText2.Visibility = Visibility.Hidden;
             writeMode = true;
             txtBoxDB.Text = mDBPath = Properties.Settings.Default.AccessDB;
+            txtBoxOutput.Text = mOutputPath = Properties.Settings.Default.AmazonFolder;
         }
 
         private void BrowseInput_Button_Click(object sender, RoutedEventArgs e)
@@ -63,6 +65,10 @@ namespace Geotagger_V2
                 {
                     Console.WriteLine("path error");
                 }
+            }
+            if (bucket == null  || prefix == null)
+            {
+                setAmazonBucketFromAccess();
             }
         }
 
@@ -99,6 +105,30 @@ namespace Geotagger_V2
             Properties.Settings.Default.Save();
         }
 
+        private void setAmazonBucketFromAccess()
+        {
+            string bucketQuery = "SELECT Config.bucket FROM Config;";
+            string prefixQuery = "SELECT Config.prefix FROM Config;";
+            if (mDBPath != null)
+            {
+                string[] bucketArr = queryDB(bucketQuery, mDBPath);
+                string[] prefixArr = queryDB(prefixQuery, mDBPath);
+                if (bucketArr[0] != null || prefixArr[0] != null)
+                {
+                    string caption = "Error";
+                    MessageBoxButtons buttons = MessageBoxButtons.OK;
+                    System.Windows.Forms.MessageBox.Show(bucketArr[0], caption, buttons, MessageBoxIcon.Error);
+                    bucketLabel.Content = $"Bucket: Error";
+                }
+                else
+                {
+                    bucket = bucketArr[1];
+                    prefix = prefixArr[1];
+                    bucketLabel.Content = $"Bucket: {bucket}/{prefix}";
+                }
+            }
+        }
+
         private void BrowseDB_Button_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
@@ -112,25 +142,8 @@ namespace Geotagger_V2
             if (txtBoxDB.Text == "") return; //TODO fix when user presses cancel
             string rootDirectory = Directory.GetParent(openFileDialog.FileName).FullName;
             SavePersistentValue("root", rootDirectory);
-            string bucketQuery = "SELECT Config.bucket FROM Config;";
-            string prefixQuery = "SELECT Config.prefix FROM Config;";
-            if (mDBPath != null)
-            {
-                string[] bucketArr = queryDB(bucketQuery, mDBPath);
-                string[] prefixArr = queryDB(prefixQuery, mDBPath);
-                if (bucketArr[0] != null || prefixArr[0] != null)
-                {
-                    string caption = "Error";
-                    MessageBoxButtons buttons = MessageBoxButtons.OK;
-                    System.Windows.Forms.MessageBox.Show(bucketArr[0], caption, buttons, MessageBoxIcon.Error);
-                    bucketLabel.Content = $"Bucket: Error";
-                } else
-                {
-                    bucket = bucketArr[1];
-                    prefix = prefixArr[1];
-                    bucketLabel.Content = $"Bucket: {bucket}/{prefix}";
-                }
-            }
+            setAmazonBucketFromAccess();
+
         }
 
         //    } else 
@@ -401,6 +414,8 @@ namespace Geotagger_V2
                 if (writeMode)
                 {
                     ProgressLabel.Content = manager.updateProgessMessage;
+                    int progress = Convert.ToInt32(manager.updateProgessValue);
+                    ProgressText.Text = progress.ToString() + "%";
                     ProgressBar1.Value = manager.updateProgessValue;
                     PhotoCountLabel.Content = "Processing photo: " + (manager.updatePhotoCount - manager.updatePhotoQueueCount) + " of " + manager.updatePhotoCount;
                     RecordCountLabel.Content = "Records to process: " + manager.updateRecordCount;
@@ -570,8 +585,8 @@ namespace Geotagger_V2
                 {
                     refreshUI();
                     uploading = false;
-                    Geotag.IsEnabled = true;
-                    Upload.IsEnabled = true;
+                    Geotag.IsEnabled = false;
+                    Upload.IsEnabled = false;
                     SpeedLabel.Content = "Items/sec: 0";
                 }));
                 
@@ -644,9 +659,7 @@ namespace Geotagger_V2
                         deletePhotos();
                         Dispatcher.Invoke((Action)(() =>
                         {
-                            ProgressLabel.Content = "Finished!";
-                            Geotag.IsEnabled = true;
-                            Upload.IsEnabled = true;
+                            ProgressLabel.Content = "Upload Completed!";
                         }));
                     } else
                     {
@@ -667,6 +680,9 @@ namespace Geotagger_V2
             
         }
 
-        
+        private void CheckBox_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
