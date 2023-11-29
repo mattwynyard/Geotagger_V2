@@ -49,6 +49,7 @@ namespace Geotagger_V2
             using (var browseFolderDialog = new FolderBrowserDialog())
             {
                 browseFolderDialog.SelectedPath = Properties.Settings.Default.RootFolder;
+                browseFolderDialog.ShowNewFolderButton = false;
                 DialogResult result = browseFolderDialog.ShowDialog();
                 if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(browseFolderDialog.SelectedPath))
                 {
@@ -56,11 +57,8 @@ namespace Geotagger_V2
                     if (File.Exists(mDBPath) && Directory.Exists(mInputPath))
                     {
                         Geotag.IsEnabled = true;
-                    }
-                } else
-                {
-                    return;
-                }           
+                    } 
+                }          
             }
         }
 
@@ -77,10 +75,6 @@ namespace Geotagger_V2
                     {
                         Upload.IsEnabled = true;
                     }
-                }
-                else
-                {
-                    return;
                 }
             }
         }
@@ -278,7 +272,6 @@ namespace Geotagger_V2
                     manager.photoReader(mInputPath, false);
                     progressIndeterminate(false);
                     TaskStatus result = manager.readDatabase(mDBPath, "").Result;
-                    Console.WriteLine(result);
                     if (result == TaskStatus.RanToCompletion)
                     {
                         if (manager.updateDuplicateCount == 0)
@@ -313,7 +306,9 @@ namespace Geotagger_V2
                     }
                     else
                     {
-                        Console.WriteLine(result);
+                        System.Windows.Forms.MessageBox.Show("An unknown error has occured - Geotag Task failed", "Geotag Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        
                     }
                 }, token);
 
@@ -338,6 +333,11 @@ namespace Geotagger_V2
                     ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
                     LogWriter log = new LogWriter(manager);
                     log.Write(mDBPath, elapsedTime);
+                    if (manager.getGeotagCount() == 0)
+                    {
+                        System.Windows.Forms.MessageBox.Show("No photos where geotagged!\nCheck that the correct database has been selected and/or the correct photo folder has been selected.", "Geotag Warning",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
                 }
                 catch (OperationCanceledException ex)
                 {

@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Emgu.CV;
 using Emgu.CV.Structure;
 
@@ -167,6 +168,7 @@ namespace Geotagger_V2
             {
                 Console.WriteLine(ex.StackTrace);
             }
+
             return taskreader.Status;
             
         }
