@@ -54,11 +54,15 @@ namespace Geotagger_V2
                 if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(browseFolderDialog.SelectedPath))
                 {
                     txtBoxInput.Text = mInputPath = browseFolderDialog.SelectedPath;
-                    if (File.Exists(mDBPath) && Directory.Exists(mInputPath))
+
+                }
+                if(File.Exists(mDBPath) && Directory.Exists(mInputPath) && Directory.Exists(mOutputPath))
                     {
-                        Geotag.IsEnabled = true;
-                    } 
-                }          
+                    Geotag.IsEnabled = true;
+                } else
+                {
+                    Console.WriteLine("path error");
+                }
             }
         }
 
@@ -71,9 +75,12 @@ namespace Geotagger_V2
                 if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(browseFolderDialog.SelectedPath))
                 {
                     txtBoxOutput.Text = mOutputPath = browseFolderDialog.SelectedPath;
-                    if (Directory.Exists(mOutputPath))
+                    if (File.Exists(mDBPath) && Directory.Exists(mInputPath) && Directory.Exists(mOutputPath))
                     {
-                        Upload.IsEnabled = true;
+                        Geotag.IsEnabled = true;
+                    } else
+                    {
+                        Console.WriteLine("path error");
                     }
                 }
             }
@@ -323,7 +330,7 @@ namespace Geotagger_V2
                     BrowseDB.IsEnabled = true;
                     BrowseInput.IsEnabled = true;
                     BrowseOutput.IsEnabled = true;
-                    Geotag.IsEnabled = true;
+                    Geotag.IsEnabled = false;
                     Upload.IsEnabled = true;
                     TabItemRead.IsEnabled = true;
                     dispatcherTimer.Stop();

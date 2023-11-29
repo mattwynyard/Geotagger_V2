@@ -262,7 +262,7 @@ namespace Geotagger_V2
             
             await Task.WhenAll(producer, consumer);
             Interlocked.Exchange(ref _progressBitmapQueueCount, bitmapQueue.Count);
-            Interlocked.Exchange(ref _progressMessage, "Finished!");
+            Interlocked.Exchange(ref _progressMessage, "Geotagging Finished...");
             return consumer.Status;
         }
 
