@@ -158,19 +158,25 @@ namespace Geotagger_V2
 
         private void BrowseDB_Button_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Title = "Import Access Database";
-            openFileDialog.Filter = "MS Access (*.mdb *.accdb)|*.mdb;*.accdb";
-            openFileDialog.RestoreDirectory = true;
-            openFileDialog.ShowDialog();
-
-            txtBoxDB.Text = mDBPath = openFileDialog.FileName;
-            SavePersistentValue("access", openFileDialog.FileName);
-            if (txtBoxDB.Text == "") return; //TODO fix when user presses cancel
-            string rootDirectory = Directory.GetParent(openFileDialog.FileName).FullName;
-            SavePersistentValue("root", rootDirectory);
-            setAmazonBucketFromAccess();
-
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Title = "Import Access Database";
+                openFileDialog.Filter = "MS Access (*.mdb *.accdb)|*.mdb;*.accdb";
+                openFileDialog.RestoreDirectory = true;
+                DialogResult result = openFileDialog.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(openFileDialog.FileName))
+                {
+                    txtBoxDB.Text = mDBPath = openFileDialog.FileName;
+                    SavePersistentValue("access", openFileDialog.FileName);
+                    string rootDirectory = Directory.GetParent(openFileDialog.FileName).FullName;
+                    SavePersistentValue("root", rootDirectory);
+                    setAmazonBucketFromAccess();
+                } else
+                {
+                    txtBoxDB.Text = mDBPath = openFileDialog.FileName;
+                    SavePersistentValue("access", "");
+                }
+            }
         }
 
         //    } else 
