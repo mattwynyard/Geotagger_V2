@@ -41,9 +41,13 @@ namespace Geotagger_V2
             InitializeComponent();
             ProgressBar2.Visibility = Visibility.Hidden;
             ProgressText2.Visibility = Visibility.Hidden;
+            txtBoxDB.IsReadOnly = true;
+            txtBoxInput.IsReadOnly = true;
+            txtBoxOutput.IsReadOnly = true;
             writeMode = true;
             txtBoxDB.Text = mDBPath = Properties.Settings.Default.AccessDB;
             txtBoxOutput.Text = mOutputPath = Properties.Settings.Default.AmazonFolder;
+            TabItemRead.IsEnabled = false;
         }
 
         private void BrowseInput_Button_Click(object sender, RoutedEventArgs e)
@@ -563,13 +567,13 @@ namespace Geotagger_V2
         {
             if (writeMode)
             {
-                writeMode = false;
+                return;
             }
-            else
-            {
-                writeMode = true;
-            }
-            Console.WriteLine(writeMode);
+            //else
+            //{
+            //    writeMode = true;
+            //}
+
         }
 
         private void txtOutputPathRead_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)

@@ -20,7 +20,7 @@
                 MouseLeftButtonDown="changeMode" 
                 HorizontalAlignment="Stretch"/>
                 </TabItem.Header>
-                <Grid Background="#FFE5E5E5" Margin="0,-17">
+                <Grid Background="#FFDCDADA" Margin="0,-17">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="16*"/>
                         <ColumnDefinition Width="37*"/>
@@ -29,9 +29,9 @@
                         <ColumnDefinition Width="11*"/>
                         <ColumnDefinition Width="881*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="txtBoxDB" HorizontalAlignment="Left" Height="30" Margin="82,50,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="516" Grid.Column="5" FontSize="14"/>
-                    <TextBox x:Name="txtBoxOutput" HorizontalAlignment="Left" Height="30" Margin="82,136,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="516" Grid.Column="5" FontSize="14"/>
-                    <TextBox x:Name="txtBoxInput" HorizontalAlignment="Left" Height="30" Margin="82,92,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="516" Grid.Column="5" FontSize="14"/>
+                    <TextBox x:Name="txtBoxDB" HorizontalAlignment="Left" Height="30" Margin="82,50,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="516" Grid.Column="5" FontSize="14" Background="#FFE6E6E6"/>
+                    <TextBox x:Name="txtBoxOutput" HorizontalAlignment="Left" Height="30" Margin="82,136,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="516" Grid.Column="5" FontSize="14" Background="#FFE6E6E6"/>
+                    <TextBox x:Name="txtBoxInput" HorizontalAlignment="Left" Height="30" Margin="82,92,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="516" Grid.Column="5" FontSize="14" Background="#FFE6E6E6"/>
                     <Button x:Name="BrowseDB" Content="Browse" HorizontalAlignment="Left" Height="30" Margin="614,50,0,0" VerticalAlignment="Top" Width="77" Click="BrowseDB_Button_Click" Grid.Column="5" FontSize="14"/>
                     <Label Content="Database Path" HorizontalAlignment="Left" Height="27" Margin="10,52,0,0" VerticalAlignment="Top" Width="106" RenderTransformOrigin="0.58,1.863" Grid.Column="2" FontSize="14" Grid.ColumnSpan="4"/>
                     <Label Content="Photo Directory" HorizontalAlignment="Left" Height="35" Margin="4,91,0,0" VerticalAlignment="Top" Width="110" RenderTransformOrigin="0.58,1.863" Grid.ColumnSpan="4" Grid.Column="2" FontSize="14"/>
