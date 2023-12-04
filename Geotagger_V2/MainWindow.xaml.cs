@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace Geotagger_V2
@@ -88,8 +89,6 @@ namespace Geotagger_V2
             {
                 return true;
             }
-            //foreach (var fi in JPGFiles)
-            //    log.Info(fi.Exists);
         }
 
         private void BrowseOutput_Button_Click(object sender, RoutedEventArgs e)
@@ -155,7 +154,20 @@ namespace Geotagger_V2
                 {
                     bucket = bucketArr[1];
                     prefix = prefixArr[1];
-                    bucketLabel.Content = $"Bucket: {bucket}/{prefix}";
+                    string[] tokens = prefix.Split('/');
+                    for (int i = 0; i < tokens.Length; i++) 
+                    {
+                        int index = tokens[i].IndexOf('_');
+                        if (index != -1)
+                        {
+                            string newToken  = tokens[i].Insert(index, "_");
+                            tokens[i] = newToken;
+                        }
+                    }
+                    bucketLabel.Content = $"Bucket: {bucket}";
+                    prefixLabel.Content = $"Prefix: {String.Join("/", tokens)}";
+  
+                    
                 }
             }
         }
