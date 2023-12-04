@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Amazon.S3.Model;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.OleDb;
@@ -9,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace Geotagger_V2
@@ -457,6 +457,8 @@ namespace Geotagger_V2
                     UploadCountLabel.Content = "Uploading File: " + AmazonUploader.uploadSum + " of " + AmazonUploader.files;
                 }
                 ProgressBar1.Value = AmazonUploader.updateProgessValue;
+                int progress = Convert.ToInt32(ProgressBar1.Value);
+                ProgressText.Text = progress.ToString() + "%";
                 ProgressLabel.Content = AmazonUploader.updateProgessMessage;
             } else
             {
@@ -698,6 +700,7 @@ namespace Geotagger_V2
                 {
                     showProgressBar();
                     progressIndeterminate(false);
+                    //ProgressBar1.SetState(2);
                     Console.WriteLine("Processor Count:" + Environment.ProcessorCount);
                     bool start = AmazonUploader.Intialise(Environment.ProcessorCount);
                     if (start)
@@ -729,4 +732,5 @@ namespace Geotagger_V2
         }
 
     }
+
 }
