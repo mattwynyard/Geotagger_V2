@@ -22,7 +22,6 @@ namespace Geotagger_V2
         private string mDBPath;
         private string mInputPath;
         private string mOutputPath;
-        private string mInputReadPath;
         private DispatcherTimer dispatcherTimer;
         private GTWriter manager;
         private GTReader reader;
@@ -34,9 +33,8 @@ namespace Geotagger_V2
         private int prevUploadCount = 0;
         private string bucket;
         private string prefix;
-        private bool amazonLocked;
-       
 
+    
         public MainWindow()
         {
             InitializeComponent();
