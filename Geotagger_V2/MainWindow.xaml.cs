@@ -64,7 +64,6 @@ namespace Geotagger_V2
 
                 }
                 if(File.Exists(mDBPath) && Directory.Exists(mInputPath) && Directory.Exists(mOutputPath))
-                //if (File.Exists(mDBPath) && Directory.Exists(mInputPath))
                     {
                     Geotag.IsEnabled = true;
                 } else
@@ -106,6 +105,10 @@ namespace Geotagger_V2
                         if (FolderHasPhotos(mOutputPath))
                         {
                             Upload.IsEnabled = true;
+                            MessageBoxResult msgResult = System.Windows.MessageBox.Show("The Amazon Upload folder already contains files",
+                                "Upload Warning",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Warning);
                         }
                     } else
                     {
