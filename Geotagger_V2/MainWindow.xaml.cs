@@ -397,7 +397,6 @@ namespace Geotagger_V2
                     BrowseOutput.IsEnabled = true;
                     Geotag.IsEnabled = false;
                     Upload.IsEnabled = true;
-                    TabItemRead.IsEnabled = true;
                     dispatcherTimer.Stop();
                     timer = false;
                     TimeSpan ts = stopwatch.Elapsed;
