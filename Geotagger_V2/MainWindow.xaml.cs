@@ -121,7 +121,7 @@ namespace Geotagger_V2
                     }
                 }
             }
-        }
+        
 
         private void SavePersistentValue(string key, string value)
         {
