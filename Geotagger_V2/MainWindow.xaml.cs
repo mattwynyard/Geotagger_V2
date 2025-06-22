@@ -46,7 +46,7 @@ namespace Geotagger_V2
             writeMode = true;
             txtBoxDB.Text = mDBPath = Properties.Settings.Default.AccessDB;
             txtBoxOutput.Text = mOutputPath = Properties.Settings.Default.AmazonFolder;
-            TabItemRead.IsEnabled = false;
+            //TabItemRead.IsEnabled = false;
         }
 
         private void BrowseInput_Button_Click(object sender, RoutedEventArgs e)
@@ -75,18 +75,18 @@ namespace Geotagger_V2
             }
         }
 
-        private bool FolderHasPhotos(string ProcessingDirectory)
-        {
-            DirectoryInfo di = new DirectoryInfo(ProcessingDirectory);
-            FileInfo[] JPGFiles = di.GetFiles("*.jpg");
-            if (JPGFiles.Length == 0)
-            {
-                return false;
-            } else
-            {
-                return true;
-            }
-        }
+        //private bool FolderHasPhotos(string ProcessingDirectory)
+        //{
+        //    DirectoryInfo di = new DirectoryInfo(ProcessingDirectory);
+        //    FileInfo[] JPGFiles = di.GetFiles("*.jpg");
+        //    if (JPGFiles.Length <= 0)
+        //    {
+        //        return false;
+        //    } else
+        //    {
+        //        return true;
+        //    }
+        //}
 
         private void BrowseOutput_Button_Click(object sender, RoutedEventArgs e)
         {
@@ -110,14 +110,14 @@ namespace Geotagger_V2
                     //    }
                     //} else
                     //{
-                    //    if (FolderHasPhotos(mOutputPath))
-                    //    {
+                        //if (FolderHasPhotos(mOutputPath))
+                        //{
                             Upload.IsEnabled = true;
                             if (bucket == null || prefix == null)
                             {
                                 setAmazonBucketFromAccess();
                             }
-                        //}
+                        }
                     }
                 }
             }
@@ -175,80 +175,56 @@ namespace Geotagger_V2
 
         private void BrowseDB_Button_Click(object sender, RoutedEventArgs e)
         {
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            if (TabItemWrite.IsSelected)
             {
-                openFileDialog.Title = "Import Access Database";
-                openFileDialog.Filter = "MS Access (*.mdb *.accdb)|*.mdb;*.accdb";
-                openFileDialog.RestoreDirectory = true;
-                DialogResult result = openFileDialog.ShowDialog();
-                if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(openFileDialog.FileName))
+                using (OpenFileDialog openFileDialog = new OpenFileDialog())
                 {
-                    txtBoxDB.Text = mDBPath = openFileDialog.FileName;
-                    SavePersistentValue("access", openFileDialog.FileName);
-                    string rootDirectory = Directory.GetParent(openFileDialog.FileName).FullName;
-                    SavePersistentValue("root", rootDirectory);
-                    setAmazonBucketFromAccess();
-                } else
-                {
-                    txtBoxDB.Text = mDBPath = openFileDialog.FileName;
-                    SavePersistentValue("access", "");
+                    openFileDialog.Title = "Import Access Database";
+                    openFileDialog.Filter = "MS Access (*.mdb *.accdb)|*.mdb;*.accdb";
+                    openFileDialog.RestoreDirectory = true;
+                    DialogResult result = openFileDialog.ShowDialog();
+                    if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(openFileDialog.FileName))
+                    {
+                        txtBoxDB.Text = mDBPath = openFileDialog.FileName;
+                        SavePersistentValue("access", openFileDialog.FileName);
+                        string rootDirectory = Directory.GetParent(openFileDialog.FileName).FullName;
+                        SavePersistentValue("root", rootDirectory);
+                        setAmazonBucketFromAccess();
+                    }
+                    else
+                    {
+                        txtBoxDB.Text = mDBPath = openFileDialog.FileName;
+                        SavePersistentValue("access", "");
+                    }
                 }
             }
         }
 
-        //    } else 
-        //    {
-        //        if (TabItemWrite.IsSelected) //write
-        //        {
+        private void BrowseInputRead_Click(object sender, RoutedEventArgs e)
+        {
+            using (FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog())
+            {
+                browseFolderDialog.ShowDialog();
+                if (browseFolderDialog.SelectedPath != "")
+                {
+                    txtInputPathRead.Text = mInputPath = browseFolderDialog.SelectedPath;
+                }
+            }
+        }
 
-        //            FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog();
-        //            //if (Directory.Exists(Directory.GetParent(mDBPath).ToString()))
-        //            //{
-        //            //    browseFolderDialog.SelectedPath = Directory.GetParent(mDBPath).ToString();
-        //            //}
-        //            browseFolderDialog.ShowDialog();
-        //            if (b.Name == "BrowseInput")
-        //            {
-        //                if (browseFolderDialog.SelectedPath != "")
-        //                {
-        //                    txtBoxInput.Text = mInputPath = browseFolderDialog.SelectedPath;
-        //                    Properties.Settings.Default.PhotoFolder = txtBoxInput.Text;
-        //                    Properties.Settings.Default.Save();
+        private void BrowseOutputRead_Click(object sender, RoutedEventArgs e)
+        {
+            using (SaveFileDialog saveFileDialog1 = new SaveFileDialog())
+            {
+                saveFileDialog1.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
+                saveFileDialog1.ShowDialog();
+                if (saveFileDialog1.FileName != "")
+                {
+                    txtOutputPathRead.Text = mOutputPath = saveFileDialog1.FileName;
+                }
+            }
+        }
 
-        //                }
-        //            }
-        //            else
-        //            {
-        //                if (browseFolderDialog.SelectedPath != "")
-        //                {
-        //                    txtBoxOutput.Text = mOutputPath = browseFolderDialog.SelectedPath;
-        //                    Upload.IsEnabled = true;
-        //                    Geotag.IsEnabled = true;
-        //                }
-        //            }
-        //        } else //read
-        //        {
-        //            if (b.Name == "BrowseInputRead")
-        //            {
-        //                FolderBrowserDialog browseFolderDialog = new FolderBrowserDialog();
-        //                browseFolderDialog.ShowDialog();
-        //                if (browseFolderDialog.SelectedPath != "")
-        //                {
-        //                    txtInputPathRead.Text = mInputPath = browseFolderDialog.SelectedPath;
-        //                }
-        //            } else
-        //            {
-        //                SaveFileDialog saveFileDialog1 = new SaveFileDialog();
-        //                saveFileDialog1.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
-        //                saveFileDialog1.ShowDialog();
-        //                if (saveFileDialog1.FileName != "")
-        //                {
-        //                    txtOutputPathRead.Text = mOutputPath = saveFileDialog1.FileName;
-        //                }
-        //            }                 
-        //        }             
-        //    }
-        //}
         private async void GeotagRead_Click(object sender, RoutedEventArgs e)
         {
             if (Utilities.directoryHasFiles(mInputPath)) {
@@ -579,14 +555,7 @@ namespace Geotagger_V2
 
         private void changeMode(object sender, RoutedEventArgs e)
         {
-            if (writeMode)
-            {
-                return;
-            }
-            //else
-            //{
-            //    writeMode = true;
-            //}
+            writeMode = !writeMode;
 
         }
 
@@ -730,6 +699,7 @@ namespace Geotagger_V2
                 result = System.Windows.Forms.MessageBox.Show(message, caption, buttons, MessageBoxIcon.Error);
             }         
         }
+
 
     }
 

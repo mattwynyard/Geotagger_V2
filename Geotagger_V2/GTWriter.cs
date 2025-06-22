@@ -179,7 +179,7 @@ namespace Geotagger_V2
             Task producer = Task.Factory.StartNew(() =>
             {
                 int i = 0;
-                foreach (var item in photoQueue.GetConsumingEnumerable())
+             foreach (var item in photoQueue.GetConsumingEnumerable())
                 {
                     try
                     {
@@ -372,28 +372,24 @@ namespace Geotagger_V2
                         }
                     }
                 }
-                object[] o = { threadInfo, bmp };
-                if (o[1] != null)
-                {
-                    bitmapQueue.Add(o);
-                }
-                else
-                {
-                    _bitmapError++;
-                }
-
-                Interlocked.Exchange(ref _progressBitmapQueueCount, bitmapQueue.Count);
-                mre.Set();
-                return r;
-
             }
             catch (Exception ex)
             {
                 String s = ex.StackTrace;
-                return null;
-            } 
-
-
+            }
+            
+            object[] o = { threadInfo, bmp };
+            if (o[1] != null)
+            {
+                bitmapQueue.Add(o);
+            } else
+            {
+                _bitmapError++;
+            }
+                
+            Interlocked.Exchange(ref _progressBitmapQueueCount, bitmapQueue.Count);
+            mre.Set();
+            return r;
         }
 
         private async void processImage(object[] item)
