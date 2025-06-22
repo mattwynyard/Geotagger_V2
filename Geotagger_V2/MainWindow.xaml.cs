@@ -100,27 +100,15 @@ namespace Geotagger_V2
                     if (File.Exists(mDBPath) && Directory.Exists(mInputPath) && Directory.Exists(mOutputPath))
                     {
                         Geotag.IsEnabled = true;
-                    //    if (FolderHasPhotos(mOutputPath))
-                    //    {
-                    //        Upload.IsEnabled = true;
-                    //        MessageBoxResult msgResult = System.Windows.MessageBox.Show("The Amazon Upload folder already contains files",
-                    //            "Upload Warning",
-                    //            MessageBoxButton.OK,
-                    //            MessageBoxImage.Warning);
-                    //    }
-                    //} else
-                    //{
-                        //if (FolderHasPhotos(mOutputPath))
-                        //{
                             Upload.IsEnabled = true;
                             if (bucket == null || prefix == null)
                             {
                                 setAmazonBucketFromAccess();
                             }
-                        }
                     }
                 }
             }
+        }
         
 
         private void SavePersistentValue(string key, string value)
