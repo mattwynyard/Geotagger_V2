@@ -79,7 +79,7 @@ namespace Geotagger_V2
         {
             DirectoryInfo di = new DirectoryInfo(ProcessingDirectory);
             FileInfo[] JPGFiles = di.GetFiles("*.jpg");
-            if (JPGFiles.Length == 0)
+            if (JPGFiles.Length <= 0)
             {
                 return false;
             } else
@@ -100,24 +100,24 @@ namespace Geotagger_V2
                     if (File.Exists(mDBPath) && Directory.Exists(mInputPath) && Directory.Exists(mOutputPath))
                     {
                         Geotag.IsEnabled = true;
-                        if (FolderHasPhotos(mOutputPath))
-                        {
-                            Upload.IsEnabled = true;
-                            MessageBoxResult msgResult = System.Windows.MessageBox.Show("The Amazon Upload folder already contains files",
-                                "Upload Warning",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Warning);
-                        }
-                    } else
-                    {
-                        if (FolderHasPhotos(mOutputPath))
-                        {
+                    //    if (FolderHasPhotos(mOutputPath))
+                    //    {
+                    //        Upload.IsEnabled = true;
+                    //        MessageBoxResult msgResult = System.Windows.MessageBox.Show("The Amazon Upload folder already contains files",
+                    //            "Upload Warning",
+                    //            MessageBoxButton.OK,
+                    //            MessageBoxImage.Warning);
+                    //    }
+                    //} else
+                    //{
+                        //if (FolderHasPhotos(mOutputPath))
+                        //{
                             Upload.IsEnabled = true;
                             if (bucket == null || prefix == null)
                             {
                                 setAmazonBucketFromAccess();
                             }
-                        }
+                        //}
                     }
                 }
             }

@@ -179,7 +179,7 @@ namespace Geotagger_V2
             Task producer = Task.Factory.StartNew(() =>
             {
                 int i = 0;
-                foreach (var item in photoQueue.GetConsumingEnumerable())
+             foreach (var item in photoQueue.GetConsumingEnumerable())
                 {
                     try
                     {
