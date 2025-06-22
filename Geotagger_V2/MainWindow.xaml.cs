@@ -75,18 +75,18 @@ namespace Geotagger_V2
             }
         }
 
-        private bool FolderHasPhotos(string ProcessingDirectory)
-        {
-            DirectoryInfo di = new DirectoryInfo(ProcessingDirectory);
-            FileInfo[] JPGFiles = di.GetFiles("*.jpg");
-            if (JPGFiles.Length <= 0)
-            {
-                return false;
-            } else
-            {
-                return true;
-            }
-        }
+        //private bool FolderHasPhotos(string ProcessingDirectory)
+        //{
+        //    DirectoryInfo di = new DirectoryInfo(ProcessingDirectory);
+        //    FileInfo[] JPGFiles = di.GetFiles("*.jpg");
+        //    if (JPGFiles.Length <= 0)
+        //    {
+        //        return false;
+        //    } else
+        //    {
+        //        return true;
+        //    }
+        //}
 
         private void BrowseOutput_Button_Click(object sender, RoutedEventArgs e)
         {

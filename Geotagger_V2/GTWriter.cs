@@ -372,24 +372,38 @@ namespace Geotagger_V2
                         }
                     }
                 }
+                object[] o = { threadInfo, bmp };
+                if (o[1] != null)
+                {
+                    bitmapQueue.Add(o);
+                }
+                else
+                {
+                    _bitmapError++;
+                }
+
+                Interlocked.Exchange(ref _progressBitmapQueueCount, bitmapQueue.Count);
+                mre.Set();
+                return r;
             }
             catch (Exception ex)
             {
                 String s = ex.StackTrace;
+                return null;
             }
             
-            object[] o = { threadInfo, bmp };
-            if (o[1] != null)
-            {
-                bitmapQueue.Add(o);
-            } else
-            {
-                _bitmapError++;
-            }
+            //object[] o = { threadInfo, bmp };
+            //if (o[1] != null)
+            //{
+            //    bitmapQueue.Add(o);
+            //} else
+            //{
+            //    _bitmapError++;
+            //}
                 
-            Interlocked.Exchange(ref _progressBitmapQueueCount, bitmapQueue.Count);
-            mre.Set();
-            return r;
+            //Interlocked.Exchange(ref _progressBitmapQueueCount, bitmapQueue.Count);
+            //mre.Set();
+            //return r;
         }
 
         private async void processImage(object[] item)
